@@ -1,0 +1,12 @@
+{
+  "Author": "iv230",
+  "Name": "Chat Proximity",
+  "Punchline": "Know how far they talk from.",
+  "Description": "This plugin will change message in the chat within the \"say\" channel, darkening people when they're far from you.'",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "chat",
+    "plugin",
+    "rp"
+  ]
+}
