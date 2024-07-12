@@ -49,22 +49,21 @@ namespace ChatProximity.Handlers
                 if (senderCharacter == null)
                 {
                     Plugin.PluginLog.Warning($"Could not resolve sender character: {sender}");
+                    return;
                 }
 
-                if (senderCharacter != currentPlayer)
-                {
-                    Plugin.PluginLog.Debug($"Found character: {senderCharacter->Name.ToString()}");
-                    var distance = Vector3.Distance(currentPlayer->Position, senderCharacter->Position);
-                    finalPayload.Add(GetColor(distance));
-                }
-                else
+                if (senderCharacter == currentPlayer)
                 {
                     Plugin.PluginLog.Debug("Self message, no color change");
+                    return;
                 }
 
+                Plugin.PluginLog.Debug($"Found character: {senderCharacter->Name.ToString()}");
+                var distance = Vector3.Distance(currentPlayer->Position, senderCharacter->Position);
+
+                finalPayload.Add(GetColor(distance));
                 finalPayload.Add(new TextPayload(message.TextValue));
-                message = new SeString(finalPayload);
-                Plugin.PluginLog.Debug($"New message is: {message}");
+                finalPayload.Add(UIForegroundPayload.UIForegroundOff);
             }
             catch (Exception e)
             {
