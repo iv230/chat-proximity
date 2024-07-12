@@ -64,6 +64,8 @@ namespace ChatProximity.Handlers
                 finalPayload.Add(GetColor(distance));
                 finalPayload.Add(new TextPayload(message.TextValue));
                 finalPayload.Add(UIForegroundPayload.UIForegroundOff);
+
+                message = new SeString(finalPayload);
             }
             catch (Exception e)
             {
