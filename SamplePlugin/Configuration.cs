@@ -9,8 +9,8 @@ public class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 0;
 
-    public bool IsConfigWindowMovable { get; set; } = true;
     public bool RecolorSayChat { get; set; } = true;
+    public bool AnonymiseNames { get; set; } = true;
 
     public void Save()
     {

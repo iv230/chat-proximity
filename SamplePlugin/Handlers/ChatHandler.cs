@@ -32,7 +32,7 @@ namespace ChatProximity.Handlers
                 return;
             }
 
-            Plugin.PluginLog.Debug($"Caught {type} message from {sender.TextValue}: {message}");
+            Plugin.PluginLog.Debug($"Caught {type} message from {GetPlayerNameForLog(sender.TextValue.ToString())}: {message}");
             try
             {
                 List<Payload> finalPayload = [];
@@ -58,7 +58,7 @@ namespace ChatProximity.Handlers
                     return;
                 }
 
-                Plugin.PluginLog.Debug($"Found character: {senderCharacter->Name.ToString()}");
+                Plugin.PluginLog.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->Name.ToString())}");
                 var distance = Vector3.Distance(currentPlayer->Position, senderCharacter->Position);
 
                 finalPayload.Add(GetColor(distance));
@@ -79,6 +79,21 @@ namespace ChatProximity.Handlers
         {
             var senderName = sender.ToString().Replace("★", "").Replace("●", "").Replace("▲", "").Replace("♦", "").Replace("♥", "").Replace("♠", "").Replace("♣", "");
             return CharacterManager.Instance()->LookupBattleCharaByName(senderName, true);
+        }
+
+        private String GetPlayerNameForLog(String playerName)
+        {
+            if (playerName == null)
+            {
+                return "";
+            }
+
+            if (Plugin.Configuration.AnonymiseNames)
+            {
+                return playerName.ToString()[..2] + "...";
+            }
+
+            return playerName;
         }
 
         private static UIForegroundPayload GetColor(float distance)
