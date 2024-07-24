@@ -10,6 +10,8 @@ namespace ChatProximity.Handlers
 {
     internal class ChatHandler(Plugin Plugin)
     {
+        public static int SAY_RANGE = 20;
+
         public Plugin Plugin { get; init; } = Plugin;
 
         public unsafe void OnMessage(XivChatType type, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -32,7 +34,7 @@ namespace ChatProximity.Handlers
                 return;
             }
 
-            Plugin.PluginLog.Debug($"Caught {type} message from {GetPlayerNameForLog(sender.TextValue.ToString())}: {message}");
+            Plugin.PluginLog.Debug($"Caught {type} message from {GetPlayerNameForLog(sender.TextValue.ToString())}: {GetMessageForLog(message)}");
             try
             {
                 List<Payload> finalPayload = [];
@@ -96,10 +98,30 @@ namespace ChatProximity.Handlers
             return playerName;
         }
 
+        private String GetMessageForLog(SeString message)
+        {
+            if (message == null)
+            {
+                return "";
+            }
+
+            if (message.ToString().Length <= 2)
+            {
+                return message.ToString();
+            }
+
+            if (Plugin.Configuration.AnonymiseNames)
+            {
+                return message.ToString()[..2] + "...";
+            }
+
+            return message.ToString(); 
+        }
+
         private static UIForegroundPayload GetColor(float distance)
         {
-            var colors = new List<UIForegroundPayload> { new(1), new(2), new(3), new(4), new(5), new(6) };
-            var colorIndex = (int)distance * colors.Count / 20; // 20 is the max range of Say chat
+            var colors = new List<UIForegroundPayload> { new(1), new(2), new(3), new(4), new(5) };
+            var colorIndex = (int)distance * colors.Count / SAY_RANGE;
             Plugin.PluginLog.Debug($"Computed distance: {distance}, index {colorIndex}");
 
             return colors[colorIndex];
