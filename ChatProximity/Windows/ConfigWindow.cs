@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 
@@ -9,12 +8,12 @@ public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
 
-    public ConfigWindow(Plugin plugin) : base("Chat Proximity Config")
+    public ConfigWindow(ChatProximityPlugin chatProximityPlugin) : base("Chat Proximity Config")
     {
         //Size = new Vector2(232, 90);
         SizeCondition = ImGuiCond.Always;
 
-        configuration = plugin.Configuration;
+        configuration = chatProximityPlugin.Configuration;
     }
 
     public void Dispose() { }

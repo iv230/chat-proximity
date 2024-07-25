@@ -10,35 +10,30 @@ using ChatProximity.Handlers;
 
 namespace ChatProximity;
 
-public sealed class Plugin : IDalamudPlugin
+public sealed class ChatProximityPlugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
     [PluginService] internal static IPluginLog PluginLog { get; private set; } = null!;
-    [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
 
     private const string CommandName = "/chatprox";
 
-    public Configuration Configuration { get; init; }
-
     public readonly WindowSystem WindowSystem = new("ChatProximity");
+
+    public Configuration Configuration { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
-    private MainWindow MainWindow { get; init; }
     private ChatHandler ChatHandler { get; init; }
 
-    public Plugin()
+    public ChatProximityPlugin()
     {
         PluginLog.Info("Starting Chat Proximity!");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // Windows
         ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this);
         WindowSystem.AddWindow(ConfigWindow);
-        WindowSystem.AddWindow(MainWindow);
 
         // Handlers
         ChatHandler = new ChatHandler(this);
@@ -48,7 +43,6 @@ public sealed class Plugin : IDalamudPlugin
 
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
-        PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
 
         // Commands
         CommandManager.AddHandler(CommandName, new CommandInfo(OnChatProxCommand)
@@ -62,9 +56,7 @@ public sealed class Plugin : IDalamudPlugin
         PluginLog.Info("Disposing Chat Proximity");
 
         WindowSystem.RemoveAllWindows();
-
         ConfigWindow.Dispose();
-        MainWindow.Dispose();
 
         CommandManager.RemoveHandler(CommandName);
 
@@ -76,7 +68,7 @@ public sealed class Plugin : IDalamudPlugin
         ToggleConfigUI();
     }
 
-    private unsafe void HandleMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
+    private void HandleMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
     {
         ChatHandler.OnMessage(type, ref sender, ref message, ref isHandled);
     }
@@ -84,5 +76,4 @@ public sealed class Plugin : IDalamudPlugin
     private void DrawUI() => WindowSystem.Draw();
 
     public void ToggleConfigUI() => ConfigWindow.Toggle();
-    public void ToggleMainUI() => MainWindow.Toggle();
 }
