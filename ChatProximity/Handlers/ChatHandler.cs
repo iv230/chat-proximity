@@ -8,11 +8,14 @@ using System.Numerics;
 
 namespace ChatProximity.Handlers;
 
-internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
+internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
 {
-    public const int SayRange = 20;
+    public const int SayRange = 25;
 
     public ChatProximityPlugin ChatProximityPlugin { get; init; } = chatProximityPlugin;
+    
+    [System.Text.RegularExpressions.GeneratedRegex("[★●▲♦♥♠♣]")]
+    private static partial System.Text.RegularExpressions.Regex FriendIconsRegex();
 
     public unsafe void OnMessage(XivChatType type, ref SeString sender, ref SeString message, ref bool isHandled)
     {
@@ -71,9 +74,9 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
         ChatProximityPlugin.PluginLog.Debug("Finished processing message");
     }
 
-    private unsafe BattleChara* GetSender(SeString sender)
+    private static unsafe BattleChara* GetSender(SeString sender)
     {
-        var senderName = sender.ToString().Replace("★", "").Replace("●", "").Replace("▲", "").Replace("♦", "").Replace("♥", "").Replace("♠", "").Replace("♣", "");
+        var senderName = FriendIconsRegex().Replace(sender.ToString(), "");
         return CharacterManager.Instance()->LookupBattleCharaByName(senderName, true);
     }
 
@@ -81,33 +84,30 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     {
         if (ChatProximityPlugin.Configuration.AnonymiseNames)
         {
-            return playerName[..2] + "...";
+            return playerName.Length > 2 ? playerName[..2] + "..." : playerName;
         }
 
         return playerName;
     }
 
-    private String GetMessageForLog(SeString message)
+    private string GetMessageForLog(SeString message)
     {
-        if (message.ToString().Length <= 2)
-        {
-            return message.ToString();
-        }
-
+        var messageText = message.ToString();
         if (ChatProximityPlugin.Configuration.AnonymiseNames)
         {
-            return message.ToString()[..2] + "...";
+            return messageText.Length > 2 ? messageText[..2] + "..." : messageText;
         }
 
-        return message.ToString(); 
+        return messageText;
     }
 
     private static UIForegroundPayload GetColor(float distance)
     {
         var colors = new List<UIForegroundPayload> { new(1), new(2), new(3), new(4), new(5) };
-        var colorIndex = (int)distance * colors.Count / SayRange;
-        ChatProximityPlugin.PluginLog.Debug($"Computed distance: {distance}, index {colorIndex}");
+        var colorIndex = (int)(distance * colors.Count / SayRange);
+        colorIndex = Math.Clamp(colorIndex, 0, colors.Count - 1);  // Ensure index is within bounds
 
+        ChatProximityPlugin.PluginLog.Debug($"Computed distance: {distance}, index {colorIndex}");
         return colors[colorIndex];
     }
 }
