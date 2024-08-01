@@ -10,7 +10,7 @@ namespace ChatProximity.Handlers;
 
 internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
 {
-    public const int SayRange = 25;
+    public const int SayRange = 20;
 
     public ChatProximityPlugin ChatProximityPlugin { get; init; } = chatProximityPlugin;
     
