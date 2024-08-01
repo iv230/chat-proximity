@@ -4,7 +4,6 @@ using Dalamud.Game.Text;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 
 namespace ChatProximity.Handlers;
 
@@ -58,7 +57,14 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
             }
 
             ChatProximityPlugin.PluginLog.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->Name.ToString())}");
-            var distance = Vector3.Distance(currentPlayer->Position, senderCharacter->Position);
+            var distanceVector = currentPlayer->Position - senderCharacter->Position;
+
+            if (ChatProximityPlugin.Configuration.VerticalIncrease)
+            {
+                distanceVector.Y *= 2;   
+            }
+
+            var distance = distanceVector.Magnitude;
 
             finalPayload.Add(GetColor(distance));
             finalPayload.Add(new TextPayload(message.TextValue));

@@ -10,7 +10,6 @@ public class ConfigWindow : Window, IDisposable
 
     public ConfigWindow(ChatProximityPlugin chatProximityPlugin) : base("Chat Proximity Config")
     {
-        //Size = new Vector2(232, 90);
         SizeCondition = ImGuiCond.Always;
 
         configuration = chatProximityPlugin.Configuration;
@@ -22,10 +21,17 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var configValue = configuration.RecolorSayChat;
-        if (ImGui.Checkbox("Recolor Say chat", ref configValue))
+        var recolorSayChat = configuration.RecolorSayChat;
+        if (ImGui.Checkbox("Recolor Say chat", ref recolorSayChat))
         {
-            configuration.RecolorSayChat = configValue;
+            configuration.RecolorSayChat = recolorSayChat;
+            configuration.Save();
+        }
+        
+        var verticalIncrease = configuration.RecolorSayChat;
+        if (ImGui.Checkbox("Increase vertical distance incidence", ref verticalIncrease))
+        {
+            configuration.VerticalIncrease = verticalIncrease;
             configuration.Save();
         }
 
