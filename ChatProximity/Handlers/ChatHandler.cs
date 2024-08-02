@@ -60,7 +60,7 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
                 return;
             }
 
-            ChatProximityPlugin.PluginLog.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->Name.ToString())}");
+            ChatProximityPlugin.PluginLog.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->NameString)}");
             ChatProximityPlugin.PluginLog.Verbose($"Message is {message.ToJson()}");
 
             var distance = GetDistance(currentPlayer->Position, senderCharacter->Position);
@@ -74,6 +74,7 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
             {
                 HandleNotDirtyMessage(ref message, colorKey);
             }
+            ChatProximityPlugin.PluginLog.Verbose($"New message is {message.ToJson()}");
         }
         catch (Exception e)
         {
@@ -101,7 +102,7 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     /// <returns>A boolean indicating if the message is dirty or not</returns>
     private static bool IsMessageDirty(SeString message)
     {
-        return message.Payloads.Count > 0 && message.Payloads[0] is UIForegroundPayload { IsEnabled: true };
+        return message.Payloads.Count > 0 && message.Payloads[0].Dirty;
     }
 
     /// <summary>
@@ -179,13 +180,17 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
         }
 
         // Then process all other chunks
-        foreach (var payload in message.Payloads)
+        for (var i = 1; i < message.Payloads.Count; i++)
         {
+            var payload = message.Payloads[i];
             if (payload is UIForegroundPayload { IsEnabled: false } currentForegroundPayload)
             {
                 currentForegroundPayload.ColorKey = colorKey;
             }
         }
+
+        // Adding a last color to prevent propagation to other lines
+        message.Payloads.Insert(message.Payloads.Count, new UIForegroundPayload(0));
     }
 
     /// <summary>
