@@ -4,6 +4,7 @@ using Dalamud.Game.Text;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System;
 using System.Collections.Generic;
+using ChatProximity.Strategies;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
 namespace ChatProximity.Handlers;
@@ -66,14 +67,7 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
             var distance = GetDistance(currentPlayer->Position, senderCharacter->Position);
             var colorKey = GetColor(distance);
 
-            if (IsMessageDirty(message))
-            {
-                HandleDirtyMessage(ref message, colorKey);
-            }
-            else
-            {
-                HandleNotDirtyMessage(ref message, colorKey);
-            }
+            GetStrategy(message).HandleMessage(ref message, colorKey);
             ChatProximityPlugin.PluginLog.Verbose($"New message is {message.ToJson()}");
         }
         catch (Exception e)
@@ -163,52 +157,14 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
         ChatProximityPlugin.PluginLog.Debug($"Computed distance: {distance}, index {colorIndex}");
         return colors[colorIndex];
     }
-
+    
     /// <summary>
-    /// Handles a dirty message by modifying its payload
+    /// Get the strategy for message processing
     /// </summary>
-    /// <param name="message">The message to handle</param>
-    /// <param name="colorKey">The color of the message</param>
-    private void HandleDirtyMessage(ref SeString message, ushort colorKey)
+    /// <param name="message">The message to process</param>
+    /// <returns>The related strategy</returns>
+    private IMessageHandlerStrategy GetStrategy(SeString message)
     {
-        ChatProximityPlugin.PluginLog.Debug("Message dirty");
-
-        // Adding a first element to color the first chunk
-        if (message.Payloads[0] is UIForegroundPayload { IsEnabled: false })
-        {
-            message.Payloads.Insert(0, new UIForegroundPayload(colorKey));
-        }
-
-        // Then process all other chunks
-        for (var i = 1; i < message.Payloads.Count; i++)
-        {
-            var payload = message.Payloads[i];
-            if (payload is UIForegroundPayload { IsEnabled: false } currentForegroundPayload)
-            {
-                currentForegroundPayload.ColorKey = colorKey;
-            }
-        }
-
-        // Adding a last color to prevent propagation to other lines
-        message.Payloads.Insert(message.Payloads.Count, new UIForegroundPayload(0));
-    }
-
-    /// <summary>
-    /// Handles a not dirty message by building a new payload
-    /// </summary>
-    /// <param name="message">The message to handle</param>
-    /// <param name="colorKey">The color of the message</param>
-    private void HandleNotDirtyMessage(ref SeString message, ushort colorKey)
-    {
-        ChatProximityPlugin.PluginLog.Debug("Message not dirty");
-        List<Payload> finalPayload =
-        [
-            new UIForegroundPayload(colorKey),
-            new TextPayload(message.TextValue),
-            UIForegroundPayload.UIForegroundOff
-
-        ];
-
-        message = new SeString(finalPayload);
+        return IsMessageDirty(message) ? new DirtyMessageHandlerStrategy() : new NotDirtyMessageHandlerStrategy();
     }
 }
