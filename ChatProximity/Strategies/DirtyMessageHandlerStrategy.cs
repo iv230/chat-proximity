@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.Text.SeStringHandling;
+﻿using System.Collections.Generic;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 
 namespace ChatProximity.Strategies;
@@ -15,22 +16,45 @@ public class DirtyMessageHandlerStrategy : IMessageHandlerStrategy
         ChatProximityPlugin.PluginLog.Debug("Message dirty");
 
         // Adding a first element to color the first chunk
-        if (message.Payloads[0] is UIForegroundPayload { IsEnabled: false })
+        if (message.Payloads[0] is not UIForegroundPayload)
         {
             message.Payloads.Insert(0, new UIForegroundPayload(colorKey));
         }
 
-        // Then process all other chunks
-        for (var i = 1; i < message.Payloads.Count; i++)
+        // Extracting existing text chunks and their colors
+        List<TextPayload> textPayloads = [];
+        List<UIForegroundPayload> uiForegroundPayloads = [];
+        for (var i = 0; i < message.Payloads.Count; i++)
         {
             var payload = message.Payloads[i];
-            if (payload is UIForegroundPayload { IsEnabled: false } currentForegroundPayload)
+            if (payload is TextPayload textPayload)
             {
-                currentForegroundPayload.ColorKey = colorKey;
+                var uiForegroundPayload = (UIForegroundPayload) message.Payloads[i-1];
+
+                // If disabled, must be colored
+                if (!uiForegroundPayload.IsEnabled)
+                {
+                    uiForegroundPayload.ColorKey = colorKey;
+                }
+                
+                textPayloads.Add(textPayload);
+                uiForegroundPayloads.Add(uiForegroundPayload);
+
+                ChatProximityPlugin.PluginLog.Verbose($"Chunk \"{textPayload.Text}\" got color {uiForegroundPayload.ColorKey}");
             }
         }
 
-        // Adding a last color to prevent propagation to other lines
-        message.Payloads.Insert(message.Payloads.Count, new UIForegroundPayload(0));
+        // Building final payload; color, text, close color
+        List<Payload> finalPayload = [];
+        for (var i = 0; i < textPayloads.Count; i++)
+        {
+            finalPayload.Add(uiForegroundPayloads[i]);
+            finalPayload.Add(textPayloads[i]);
+            finalPayload.Add(new UIForegroundPayload(0));
+        }
+        
+        finalPayload.Add(UIForegroundPayload.UIForegroundOff);
+        
+        message = new SeString(finalPayload);
     }
 }
