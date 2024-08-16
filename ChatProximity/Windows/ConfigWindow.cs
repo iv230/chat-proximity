@@ -8,11 +8,11 @@ public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
 
-    public ConfigWindow(ChatProximityPlugin chatProximityPlugin) : base("Chat Proximity Config")
+    public ConfigWindow(ChatProximity chatProximity) : base("Chat Proximity Config")
     {
         SizeCondition = ImGuiCond.Always;
 
-        configuration = chatProximityPlugin.Configuration;
+        configuration = chatProximity.Configuration;
     }
 
     public void Dispose() { }

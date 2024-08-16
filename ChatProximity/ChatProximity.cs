@@ -10,12 +10,12 @@ using ChatProximity.Handlers;
 
 namespace ChatProximity;
 
-public sealed class ChatProximityPlugin : IDalamudPlugin
+public sealed class ChatProximity : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
-    [PluginService] internal static IPluginLog PluginLog { get; private set; } = null!;
+    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
 
     private const string CommandName = "/chatprox";
@@ -26,9 +26,9 @@ public sealed class ChatProximityPlugin : IDalamudPlugin
     private ConfigWindow ConfigWindow { get; init; }
     private ChatHandler ChatHandler { get; init; }
 
-    public ChatProximityPlugin()
+    public ChatProximity()
     {
-        PluginLog.Info("Starting Chat Proximity!");
+        Log.Info("Starting Chat Proximity!");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // Windows
@@ -53,7 +53,7 @@ public sealed class ChatProximityPlugin : IDalamudPlugin
 
     public void Dispose()
     {
-        PluginLog.Info("Disposing Chat Proximity");
+        Log.Info("Disposing Chat Proximity");
 
         WindowSystem.RemoveAllWindows();
         ConfigWindow.Dispose();

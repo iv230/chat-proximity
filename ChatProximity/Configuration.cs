@@ -15,6 +15,6 @@ public class Configuration : IPluginConfiguration
 
     public void Save()
     {
-        ChatProximityPlugin.PluginInterface.SavePluginConfig(this);
+        ChatProximity.PluginInterface.SavePluginConfig(this);
     }
 }

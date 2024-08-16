@@ -3,18 +3,17 @@ using Dalamud.Game.Text;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ChatProximity.Strategies;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
 namespace ChatProximity.Handlers;
 
-internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
+internal class ChatHandler(ChatProximity plugin)
 {
     public const int SayRange = 20;
 
-    public ChatProximityPlugin ChatProximityPlugin { get; init; } = chatProximityPlugin;
+    public ChatProximity Plugin { get; init; } = plugin;
 
     /// <summary>
     /// Main message handling process
@@ -27,53 +26,53 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     {
         if (isHandled)
         {
-            ChatProximityPlugin.PluginLog.Verbose("Message considered has handled, abort");
+            ChatProximity.Log.Verbose("Message considered has handled, abort");
             return;
         }
 
-        if (type != XivChatType.Say || !ChatProximityPlugin.Configuration.RecolorSayChat)
+        if (type != XivChatType.Say || !Plugin.Configuration.RecolorSayChat)
         {
-            ChatProximityPlugin.PluginLog.Verbose("Not a say message, or config is disabled, abort");
+            ChatProximity.Log.Verbose("Not a say message, or config is disabled, abort");
             return;
         }
 
-        ChatProximityPlugin.PluginLog.Debug($"Caught {type} message from {GetPlayerNameForLog(sender.TextValue)}: {GetMessageForLog(message)}");
+        ChatProximity.Log.Debug($"Caught {type} message from {GetPlayerNameForLog(sender.TextValue)}: {GetMessageForLog(message)}");
         try
         {
-            var currentPlayer = (BattleChara*)(ChatProximityPlugin.ClientState.LocalPlayer?.Address ?? 0);
+            var currentPlayer = (BattleChara*)(ChatProximity.ClientState.LocalPlayer?.Address ?? 0);
             if (currentPlayer == null) {
-                ChatProximityPlugin.PluginLog.Warning("Current player is null");
+                ChatProximity.Log.Warning("Current player is null");
                 return;
             }
 
             var senderCharacter = GetSender(sender);
             if (senderCharacter == null)
             {
-                ChatProximityPlugin.PluginLog.Warning($"Could not resolve sender character: {sender}");
+                ChatProximity.Log.Warning($"Could not resolve sender character: {sender}");
                 return;
             }
 
             if (senderCharacter == currentPlayer)
             {
-                ChatProximityPlugin.PluginLog.Debug("Self message, no color change");
+                ChatProximity.Log.Debug("Self message, no color change");
                 return;
             }
 
-            ChatProximityPlugin.PluginLog.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->NameString)}");
-            ChatProximityPlugin.PluginLog.Verbose($"Message is {message.ToJson()}");
+            ChatProximity.Log.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->NameString)}");
+            ChatProximity.Log.Verbose($"Message is {message.ToJson()}");
 
             var distance = GetDistance(currentPlayer->Position, senderCharacter->Position);
             var colorKey = GetColor(distance);
 
             GetStrategy(message).HandleMessage(ref message, colorKey);
-            ChatProximityPlugin.PluginLog.Verbose($"New message is {message.ToJson()}");
+            ChatProximity.Log.Verbose($"New message is {message.ToJson()}");
         }
         catch (Exception e)
         {
-            ChatProximityPlugin.PluginLog.Error(e, "Exception while processing message");
+            ChatProximity.Log.Error(e, "Exception while processing message");
         }
 
-        ChatProximityPlugin.PluginLog.Debug("Finished processing message");
+        ChatProximity.Log.Debug("Finished processing message");
     }
 
     /// <summary>
@@ -83,7 +82,24 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     /// <returns>The sender object pointers</returns>
     private static unsafe BattleChara* GetSender(SeString sender)
     {
-        var senderName = sender.Payloads.OfType<PlayerPayload>().FirstOrDefault()?.PlayerName;
+        ChatProximity.Log.Verbose($"Sender is {sender.ToJson()}");
+        string? senderName = null;
+
+        foreach (var payload in sender.Payloads)
+        {
+            if (payload is PlayerPayload playerPayload)
+            {
+                senderName = playerPayload.PlayerName;
+                break;
+            }
+
+            if (payload is TextPayload textPayload && textPayload.Text == ChatProximity.ClientState.LocalPlayer?.Name.TextValue)
+            {
+                senderName = textPayload.Text;
+                break;
+            }
+        }
+
         return senderName != null ? CharacterManager.Instance()->LookupBattleCharaByName(senderName, true) : null;
     }
     
@@ -104,7 +120,7 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     /// <returns>The two first characters of the name followed by ... if anonymise is enabled, the whole name otherwise</returns>
     private String GetPlayerNameForLog(String playerName)
     {
-        return ChatProximityPlugin.Configuration.AnonymiseNames && playerName.Length > 2
+        return Plugin.Configuration.AnonymiseNames && playerName.Length > 2
                    ? playerName[..2] + "..."
                    : playerName;
     }
@@ -117,7 +133,7 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     private string GetMessageForLog(SeString message)
     {
         var messageText = message.ToString();
-        return ChatProximityPlugin.Configuration.AnonymiseNames && messageText.Length > 2
+        return Plugin.Configuration.AnonymiseNames && messageText.Length > 2
                    ? messageText[..2] + "..."
                    : messageText;
     }
@@ -133,7 +149,7 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     {
         var distanceVector = player1 - player2;
 
-        if (ChatProximityPlugin.Configuration.VerticalIncrease)
+        if (Plugin.Configuration.VerticalIncrease)
         {
             distanceVector.Y *= 2;   
         }
@@ -152,7 +168,7 @@ internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
         var colorIndex = (int)(distance * colors.Count / SayRange);
         colorIndex = Math.Clamp(colorIndex, 0, colors.Count - 1);  // Ensure index is within bounds
 
-        ChatProximityPlugin.PluginLog.Debug($"Computed distance: {distance}, index {colorIndex}");
+        ChatProximity.Log.Debug($"Computed distance: {distance}, index {colorIndex}");
         return colors[colorIndex];
     }
     

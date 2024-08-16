@@ -13,7 +13,7 @@ public class NotDirtyMessageHandlerStrategy : IMessageHandlerStrategy
     /// <param name="colorKey">The color of the message</param>
     public void HandleMessage(ref SeString message, ushort colorKey)
     {
-        ChatProximityPlugin.PluginLog.Debug("Message not dirty");
+        ChatProximity.Log.Debug("Message not dirty");
         List<Payload> finalPayload =
         [
             new UIForegroundPayload(colorKey),

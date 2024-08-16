@@ -13,7 +13,7 @@ public class DirtyMessageHandlerStrategy : IMessageHandlerStrategy
     /// <param name="colorKey">The color of the message</param>
     public void HandleMessage(ref SeString message, ushort colorKey)
     {
-        ChatProximityPlugin.PluginLog.Debug("Message dirty");
+        ChatProximity.Log.Debug("Message dirty");
 
         // Ensure the first element is a color payload
         if (message.Payloads[0] is not UIForegroundPayload)
@@ -39,7 +39,7 @@ public class DirtyMessageHandlerStrategy : IMessageHandlerStrategy
                 finalPayloads.Add(textPayload);
                 finalPayloads.Add(new UIForegroundPayload(0)); // Close the color tag
 
-                ChatProximityPlugin.PluginLog.Verbose($"Chunk \"{textPayload.Text}\" got color {colorKey}");
+                ChatProximity.Log.Verbose($"Chunk \"{textPayload.Text}\" got color {colorKey}");
             }
         }
 
