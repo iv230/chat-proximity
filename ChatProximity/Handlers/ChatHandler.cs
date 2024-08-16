@@ -3,19 +3,18 @@ using Dalamud.Game.Text;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ChatProximity.Strategies;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
 namespace ChatProximity.Handlers;
 
-internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
+internal class ChatHandler(ChatProximityPlugin chatProximityPlugin)
 {
     public const int SayRange = 20;
 
     public ChatProximityPlugin ChatProximityPlugin { get; init; } = chatProximityPlugin;
-    
-    [System.Text.RegularExpressions.GeneratedRegex("[★●▲♦♥♠♣]")]
-    private static partial System.Text.RegularExpressions.Regex FriendIconsRegex();
 
     /// <summary>
     /// Main message handling process
@@ -84,8 +83,8 @@ internal partial class ChatHandler(ChatProximityPlugin chatProximityPlugin)
     /// <returns>The sender object pointers</returns>
     private static unsafe BattleChara* GetSender(SeString sender)
     {
-        var senderName = FriendIconsRegex().Replace(sender.ToString(), "");
-        return CharacterManager.Instance()->LookupBattleCharaByName(senderName, true);
+        var senderName = sender.Payloads.OfType<PlayerPayload>().FirstOrDefault()?.PlayerName;
+        return senderName != null ? CharacterManager.Instance()->LookupBattleCharaByName(senderName, true) : null;
     }
     
     /// <summary>
