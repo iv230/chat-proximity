@@ -28,7 +28,7 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
         
-        var verticalIncrease = configuration.RecolorSayChat;
+        var verticalIncrease = configuration.VerticalIncrease;
         if (ImGui.Checkbox("Increase vertical distance incidence", ref verticalIncrease))
         {
             configuration.VerticalIncrease = verticalIncrease;
