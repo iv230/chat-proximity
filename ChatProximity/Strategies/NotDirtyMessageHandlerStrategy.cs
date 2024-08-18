@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
+﻿using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Utility;
+using SeStringBuilder = Lumina.Text.SeStringBuilder;
 
 namespace ChatProximity.Strategies;
 
@@ -14,14 +14,6 @@ public class NotDirtyMessageHandlerStrategy : IMessageHandlerStrategy
     public void HandleMessage(ref SeString message, ushort colorKey)
     {
         ChatProximity.Log.Debug("Message not dirty");
-        List<Payload> finalPayload =
-        [
-            new UIForegroundPayload(colorKey),
-            new TextPayload(message.TextValue),
-            UIForegroundPayload.UIForegroundOff
-
-        ];
-
-        message = new SeString(finalPayload);
+        message = new SeStringBuilder().PushColorType(colorKey).Append(message.TextValue).ToSeString().ToDalamudString();
     }
 }

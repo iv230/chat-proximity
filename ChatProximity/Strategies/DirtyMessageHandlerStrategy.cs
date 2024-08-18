@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
+﻿using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Utility;
+using SeString = Dalamud.Game.Text.SeStringHandling.SeString;
+using SeStringBuilder = Lumina.Text.SeStringBuilder;
 
 namespace ChatProximity.Strategies;
 
@@ -14,39 +15,32 @@ public class DirtyMessageHandlerStrategy : IMessageHandlerStrategy
     public void HandleMessage(ref SeString message, ushort colorKey)
     {
         ChatProximity.Log.Debug("Message dirty");
+        var sb = new SeStringBuilder();
 
         // Ensure the first element is a color payload
         if (message.Payloads[0] is not UIForegroundPayload)
         {
             message.Payloads.Insert(0, new UIForegroundPayload(colorKey));
+            sb.PushColorType(colorKey);
         }
 
         // Extracting and processing text and color payloads
-        var finalPayloads = new List<Payload>();
-
         for (var i = 0; i < message.Payloads.Count; i++)
         {
             if (message.Payloads[i] is TextPayload textPayload)
             {
-                var previousPayload = message.Payloads[i - 1] as UIForegroundPayload;
+                var effectiveColorKey = message.Payloads[i - 1] is UIForegroundPayload { IsEnabled: false } previousPayload
+                                            ? previousPayload?.ColorKey ?? colorKey
+                                            : colorKey;
+                sb.PushColorType(effectiveColorKey);
+                sb.Append(textPayload.Text);
+                sb.PopColor();
 
-                if (previousPayload is { IsEnabled: false })
-                {
-                    previousPayload.ColorKey = colorKey;
-                }
-
-                finalPayloads.Add(previousPayload ?? new UIForegroundPayload(colorKey));
-                finalPayloads.Add(textPayload);
-                finalPayloads.Add(new UIForegroundPayload(0)); // Close the color tag
-
-                ChatProximity.Log.Verbose($"Chunk \"{textPayload.Text}\" got color {colorKey}");
+                ChatProximity.Log.Verbose($"Chunk \"{textPayload.Text}\" got color {effectiveColorKey}");
             }
         }
 
-        // Add the color off payload at the end
-        finalPayloads.Add(UIForegroundPayload.UIForegroundOff);
-
         // Update the message with the new payloads
-        message = new SeString(finalPayloads);
+        message = sb.ToSeString().ToDalamudString();
     }
 }
