@@ -1,6 +1,6 @@
 using System;
+using System.Linq;
 using ChatProximity.Config;
-using ChatProximity.Managers;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -11,14 +11,12 @@ namespace ChatProximity.Windows;
 public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
-    private readonly ColorManager colorManager;
 
     public ConfigWindow(ChatProximity chatProximity) : base("Chat Proximity Config")
     {
         SizeCondition = ImGuiCond.Always;
 
         configuration = chatProximity.Configuration;
-        colorManager = new ColorManager();
     }
 
     public void Dispose() { }
@@ -27,13 +25,6 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var recolorSayChat = configuration.RecolorSayChat;
-        if (ImGui.Checkbox("Recolor Say chat", ref recolorSayChat))
-        {
-            configuration.RecolorSayChat = recolorSayChat;
-            configuration.Save();
-        }
-        
         var verticalIncrease = configuration.VerticalIncrease;
         if (ImGui.Checkbox("Increase vertical distance incidence", ref verticalIncrease))
         {
@@ -61,8 +52,7 @@ public class ConfigWindow : Window, IDisposable
             ImGui.TableSetupColumn("Farthest Color", ImGuiTableColumnFlags.NoHide);
             ImGui.TableHeadersRow();
 
-            ImGuiClip.ClippedDraw([configuration.SayConfig, configuration.ShoutConfig, configuration.EmoteConfig], DrawChatTableLine,
-                                  ImGui.GetTextLineHeight() + (3 * ImGui.GetStyle().FramePadding.Y));
+            ImGuiClip.ClippedDraw(configuration.ChatTypeConfigs.Values.ToList(), DrawChatTableLine, ImGui.GetTextLineHeight() + (3 * ImGui.GetStyle().FramePadding.Y));
 
             ImGui.EndTable();
         }

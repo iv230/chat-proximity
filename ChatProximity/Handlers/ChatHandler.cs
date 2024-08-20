@@ -13,8 +13,6 @@ namespace ChatProximity.Handlers;
 
 internal class ChatHandler(ChatProximity plugin)
 {
-    public const int SayRange = 20;
-
     public ChatProximity Plugin { get; init; } = plugin;
 
     /// <summary>
@@ -32,7 +30,7 @@ internal class ChatHandler(ChatProximity plugin)
             return;
         }
         
-        var config = GetConfig(type);
+        Plugin.Configuration.ChatTypeConfigs.TryGetValue(type, out var config);
 
         if (config is not { Enabled: true })
         {
@@ -149,27 +147,6 @@ internal class ChatHandler(ChatProximity plugin)
         }
             
         return distanceVector.Magnitude;
-    }
-
-    /// <summary>
-    /// Give the config for given chat type
-    /// </summary>
-    /// <param name="xivChatType">The chat type to check</param>
-    /// <returns>The config related to type</returns>
-    private ChatTypeConfig? GetConfig(XivChatType xivChatType)
-    {
-        switch (xivChatType)
-        {
-            case XivChatType.StandardEmote:
-            case XivChatType.CustomEmote:
-                return Plugin.Configuration.EmoteConfig;
-            case XivChatType.Yell:
-                return Plugin.Configuration.ShoutConfig;
-            case XivChatType.Say:
-                return Plugin.Configuration.SayConfig;
-            default:
-                return null;
-        }
     }
 
     /// <summary>
