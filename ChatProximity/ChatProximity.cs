@@ -1,3 +1,4 @@
+using ChatProximity.Config;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;

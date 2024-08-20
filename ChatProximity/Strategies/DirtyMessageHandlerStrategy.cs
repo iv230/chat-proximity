@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.Text.SeStringHandling.Payloads;
+﻿using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
 using SeString = Dalamud.Game.Text.SeStringHandling.SeString;
 using SeStringBuilder = Lumina.Text.SeStringBuilder;
@@ -17,21 +18,21 @@ public class DirtyMessageHandlerStrategy : IMessageHandlerStrategy
         ChatProximity.Log.Debug("Message dirty");
         var sb = new SeStringBuilder();
 
-        // Ensure the first element is a color payload
-        if (message.Payloads[0] is not UIForegroundPayload)
-        {
-            message.Payloads.Insert(0, new UIForegroundPayload(colorKey));
-            sb.PushColorType(colorKey);
-        }
-
         // Extracting and processing text and color payloads
         for (var i = 0; i < message.Payloads.Count; i++)
         {
             if (message.Payloads[i] is TextPayload textPayload)
             {
-                var effectiveColorKey = message.Payloads[i - 1] is UIForegroundPayload { IsEnabled: false } previousPayload
-                                            ? previousPayload?.ColorKey ?? colorKey
-                                            : colorKey;
+                ushort effectiveColorKey;
+
+                ChatProximity.Log.Verbose($"i = {i}");
+                var previousPayLoad = i > 0 ? message.Payloads[i - 1] : null;
+
+                if (previousPayLoad is UIForegroundPayload { IsEnabled: true } previousPayload)
+                    effectiveColorKey = previousPayload?.ColorKey ?? colorKey;
+                else
+                    effectiveColorKey = colorKey;
+
                 sb.PushColorType(effectiveColorKey);
                 sb.Append(textPayload.Text);
                 sb.PopColor();
