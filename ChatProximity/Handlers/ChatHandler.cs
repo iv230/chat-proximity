@@ -1,11 +1,12 @@
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System;
 using System.Collections.Generic;
-using ChatProximity.Strategies;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Common.Math;
+using SeString = Dalamud.Game.Text.SeStringHandling.SeString;
+using SeStringBuilder = Lumina.Text.SeStringBuilder;
 
 namespace ChatProximity.Handlers;
 
@@ -64,7 +65,7 @@ internal class ChatHandler(ChatProximity plugin)
             var distance = GetDistance(currentPlayer->Position, senderCharacter->Position);
             var colorKey = GetColor(distance);
 
-            GetStrategy(message).HandleMessage(ref message, colorKey);
+            HandleMessage(ref message, colorKey);
             ChatProximity.Log.Verbose($"New message is {message.ToJson()}");
         }
         catch (Exception e)
@@ -101,16 +102,6 @@ internal class ChatHandler(ChatProximity plugin)
         }
 
         return senderName != null ? CharacterManager.Instance()->LookupBattleCharaByName(senderName, true) : null;
-    }
-    
-    /// <summary>
-    /// Indicates is a message is already touched by Dalamud or another plugin
-    /// </summary>
-    /// <param name="message">The message to check</param>
-    /// <returns>A boolean indicating if the message is dirty or not</returns>
-    private static bool IsMessageDirty(SeString message)
-    {
-        return message.Payloads.Count > 0 && message.Payloads[0].Dirty;
     }
 
     /// <summary>
@@ -173,12 +164,44 @@ internal class ChatHandler(ChatProximity plugin)
     }
     
     /// <summary>
-    /// Get the strategy for message processing
+    /// Handles a dirty message by modifying its payload
     /// </summary>
-    /// <param name="message">The message to process</param>
-    /// <returns>The related strategy</returns>
-    private IMessageHandlerStrategy GetStrategy(SeString message)
+    /// <param name="message">The message to handle</param>
+    /// <param name="colorKey">The color of the message</param>
+    private void HandleMessage(ref SeString message, ushort colorKey)
     {
-        return IsMessageDirty(message) ? new DirtyMessageHandlerStrategy() : new NotDirtyMessageHandlerStrategy();
+        var sb = new SeStringBuilder();
+
+        // Extracting and processing payloads
+        for (var i = 0; i < message.Payloads.Count; i++)
+        {
+            var payload = message.Payloads[i];
+
+            if (payload is TextPayload textPayload)
+            {
+                ushort effectiveColorKey;
+
+                ChatProximity.Log.Verbose($"i = {i}");
+                var previousPayLoad = i > 0 ? message.Payloads[i - 1] : null;
+
+                if (previousPayLoad is UIForegroundPayload { IsEnabled: true } previousPayload)
+                    effectiveColorKey = previousPayload.ColorKey;
+                else
+                    effectiveColorKey = colorKey;
+
+                sb.PushColorType(effectiveColorKey);
+                sb.Append(textPayload.Text);
+                sb.PopColor();
+
+                ChatProximity.Log.Verbose($"Chunk \"{textPayload.Text}\" got color {effectiveColorKey}");
+            }
+            else if (payload is not UIForegroundPayload)
+            {
+                sb.Append(payload);
+            }
+        }
+
+        // Update the message with the new payloads
+        message = sb.ToSeString().ToDalamudString();
     }
 }
