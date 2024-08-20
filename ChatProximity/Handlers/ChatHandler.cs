@@ -1,10 +1,11 @@
 using Dalamud.Game.Text;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System;
-using System.Collections.Generic;
+using ChatProximity.Config;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Common.Math;
+using Lumina.Text.ReadOnly;
 using SeString = Dalamud.Game.Text.SeStringHandling.SeString;
 using SeStringBuilder = Lumina.Text.SeStringBuilder;
 
@@ -30,10 +31,12 @@ internal class ChatHandler(ChatProximity plugin)
             ChatProximity.Log.Verbose("Message considered has handled, abort");
             return;
         }
+        
+        var config = GetConfig(type);
 
-        if (type != XivChatType.Say || !Plugin.Configuration.RecolorSayChat)
+        if (config is not { Enabled: true })
         {
-            ChatProximity.Log.Verbose("Not a say message, or config is disabled, abort");
+            ChatProximity.Log.Verbose($"Not supported message or config disabled (config is {config} for type {type})");
             return;
         }
 
@@ -63,7 +66,7 @@ internal class ChatHandler(ChatProximity plugin)
             ChatProximity.Log.Verbose($"Message is {message.ToJson()}");
 
             var distance = GetDistance(currentPlayer->Position, senderCharacter->Position);
-            var colorKey = GetColor(distance);
+            var colorKey = GetColor(distance, config);
 
             HandleMessage(ref message, colorKey);
             ChatProximity.Log.Verbose($"New message is {message.ToJson()}");
@@ -147,28 +150,60 @@ internal class ChatHandler(ChatProximity plugin)
             
         return distanceVector.Magnitude;
     }
-    
+
+    /// <summary>
+    /// Give the config for given chat type
+    /// </summary>
+    /// <param name="xivChatType">The chat type to check</param>
+    /// <returns>The config related to type</returns>
+    private ChatTypeConfig? GetConfig(XivChatType xivChatType)
+    {
+        switch (xivChatType)
+        {
+            case XivChatType.StandardEmote:
+            case XivChatType.CustomEmote:
+                return Plugin.Configuration.EmoteConfig;
+            case XivChatType.Yell:
+                return Plugin.Configuration.ShoutConfig;
+            case XivChatType.Say:
+                return Plugin.Configuration.SayConfig;
+            default:
+                return null;
+        }
+    }
+
     /// <summary>
     /// Get the color according to distance
     /// </summary>
     /// <param name="distance">The distance between the two players</param>
+    /// <param name="config">The used config for this type</param>
     /// <returns>A UI payload containing the color</returns>
-    private static ushort GetColor(float distance)
+    private static Vector4 GetColor(float distance, ChatTypeConfig config)
     {
-        var colors = new List<ushort> { 1, 2, 3, 4, 5 };
-        var colorIndex = (int)(distance * colors.Count / SayRange);
-        colorIndex = Math.Clamp(colorIndex, 0, colors.Count - 1);  // Ensure index is within bounds
+       var ratio = Math.Clamp(distance / config.Range, 0f, 1f);
 
-        ChatProximity.Log.Debug($"Computed distance: {distance}, index {colorIndex}");
-        return colors[colorIndex];
+        var nearColor = config.ClosestColor;
+        var farColor = config.FarthestColor;
+        
+        // Interpolate each component of the color
+        var r = nearColor.X + ((farColor.X - nearColor.X) * ratio);
+        var g = nearColor.Y + ((farColor.Y - nearColor.Y) * ratio);
+        var b = nearColor.Z + ((farColor.Z - nearColor.Z) * ratio);
+        var a = nearColor.W + ((farColor.W - nearColor.W) * ratio);
+
+        var vector = new Vector4(r, g, b, a);
+        ChatProximity.Log.Debug($"Computed distance: {distance}, color {vector}");
+
+        // Return the interpolated color
+        return vector;
     }
-    
+
     /// <summary>
     /// Handles a dirty message by modifying its payload
     /// </summary>
     /// <param name="message">The message to handle</param>
-    /// <param name="colorKey">The color of the message</param>
-    private void HandleMessage(ref SeString message, ushort colorKey)
+    /// <param name="color">The computed color</param>
+    private void HandleMessage(ref SeString message, Vector4 color)
     {
         var sb = new SeStringBuilder();
 
@@ -179,25 +214,20 @@ internal class ChatHandler(ChatProximity plugin)
 
             if (payload is TextPayload textPayload)
             {
-                ushort effectiveColorKey;
-
                 ChatProximity.Log.Verbose($"i = {i}");
                 var previousPayLoad = i > 0 ? message.Payloads[i - 1] : null;
 
                 if (previousPayLoad is UIForegroundPayload { IsEnabled: true } previousPayload)
-                    effectiveColorKey = previousPayload.ColorKey;
+                    sb.PushColorType(previousPayload.ColorKey);
                 else
-                    effectiveColorKey = colorKey;
+                    sb.PushColorRgba((byte)(color.X*255), (byte)(color.Y*255), (byte)(color.Z*255), (byte)(color.W*255));
 
-                sb.PushColorType(effectiveColorKey);
                 sb.Append(textPayload.Text);
                 sb.PopColor();
-
-                ChatProximity.Log.Verbose($"Chunk \"{textPayload.Text}\" got color {effectiveColorKey}");
             }
             else if (payload is not UIForegroundPayload)
             {
-                sb.Append(payload);
+                sb.Append(new ReadOnlySeStringSpan(payload.Encode()));
             }
         }
 
