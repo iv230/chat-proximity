@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Configuration;
 using Dalamud.Game.Text;
+using Lumina.Excel.GeneratedSheets2;
 
 namespace ChatProximity.Config;
 
@@ -18,20 +19,22 @@ public class Configuration : IPluginConfiguration
 
     public void Save()
     {
+        ChatProximity.Log.Debug("Saving config...");
         ChatProximity.PluginInterface.SavePluginConfig(this);
     }
 
     public void ValidateAndMigrate()
     {
         Version = 1;
+        var updated = false;
         
         if (!ChatTypeConfigs.TryGetValue(XivChatType.Say, out _))
         {
             ChatTypeConfigs[XivChatType.Say] = new ChatTypeConfig(XivChatType.Say, true, 20,
                                                                   new Vector4(1f, 1f, 1f, 1f),
                                                                   new Vector4(0.23f, 0.23f, 0.23f, 1f));
-            
-            Save();
+
+            updated = true;
             ChatProximity.Log.Info("Created config for Say chat");
         }
         
@@ -41,7 +44,7 @@ public class Configuration : IPluginConfiguration
                                                                   new Vector4(1f, 0.85f, 0.01f, 1f),
                                                                   new Vector4(0.29f, 0.25f, 0.01f, 1f));
             
-            Save();
+            updated = true;
             ChatProximity.Log.Info("Created config for Yell chat");
         }
         
@@ -51,7 +54,7 @@ public class Configuration : IPluginConfiguration
                                                                           new Vector4(0.72f, 1f, 0.94f, 1f), 
                                                                           new Vector4(0.21f, 0.29f, 0.28f, 1f));
             
-            Save();
+            updated = true;
             ChatProximity.Log.Info("Created config for Standard Emote chat");
         }
         
@@ -61,8 +64,13 @@ public class Configuration : IPluginConfiguration
                                                                   new Vector4(0.72f, 1f, 0.94f, 1f), 
                                                                   new Vector4(0.21f, 0.29f, 0.28f, 1f));
             
-            Save();
+            updated = true;
             ChatProximity.Log.Info("Created config for Custom Emote chat");
+        }
+
+        if (updated)
+        {
+            Save();
         }
     }
 }
