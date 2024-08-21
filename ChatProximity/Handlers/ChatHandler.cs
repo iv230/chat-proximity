@@ -180,7 +180,7 @@ internal class ChatHandler(ChatProximity plugin)
     /// </summary>
     /// <param name="message">The message to handle</param>
     /// <param name="color">The computed color</param>
-    private void HandleMessage(ref SeString message, Vector4 color)
+    private static void HandleMessage(ref SeString message, Vector4 color)
     {
         var sb = new SeStringBuilder();
 

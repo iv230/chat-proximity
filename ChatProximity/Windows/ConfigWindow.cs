@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using ChatProximity.Config;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
@@ -14,9 +15,11 @@ public class ConfigWindow : Window, IDisposable
 
     public ConfigWindow(ChatProximity chatProximity) : base("Chat Proximity Config")
     {
-        SizeCondition = ImGuiCond.Always;
-
         configuration = chatProximity.Configuration;
+
+        SizeCondition = ImGuiCond.Always;
+        Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+        Size = new Vector2(850, 250);
     }
 
     public void Dispose() { }
@@ -70,7 +73,7 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Text(chatTypeConfig.Type.ToString());
 
         ImGui.TableNextColumn();
-        if (ImGui.Checkbox("Enabled##enabled", ref enabled))
+        if (ImGui.Checkbox("##enabled", ref enabled))
         {
             chatTypeConfig.Enabled = enabled;
             configuration.Save();

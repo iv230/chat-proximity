@@ -39,10 +39,20 @@ public class Configuration : IPluginConfiguration
         {
             ChatTypeConfigs[XivChatType.Yell] = new ChatTypeConfig(XivChatType.Yell, true, 100,
                                                                   new Vector4(1f, 0.85f, 0.01f, 1f),
-                                                                  new Vector4(0.29f, 0.25f, 0.11f, 1f));
+                                                                  new Vector4(0.29f, 0.25f, 0.01f, 1f));
             
             Save();
             ChatProximity.Log.Info("Created config for Yell chat");
+        }
+        
+        if (!ChatTypeConfigs.TryGetValue(XivChatType.StandardEmote, out _))
+        {
+            ChatTypeConfigs[XivChatType.StandardEmote] = new ChatTypeConfig(XivChatType.StandardEmote, true, 20,
+                                                                          new Vector4(0.72f, 1f, 0.94f, 1f), 
+                                                                          new Vector4(0.21f, 0.29f, 0.28f, 1f));
+            
+            Save();
+            ChatProximity.Log.Info("Created config for Standard Emote chat");
         }
         
         if (!ChatTypeConfigs.TryGetValue(XivChatType.CustomEmote, out _))
@@ -52,7 +62,7 @@ public class Configuration : IPluginConfiguration
                                                                   new Vector4(0.21f, 0.29f, 0.28f, 1f));
             
             Save();
-            ChatProximity.Log.Info("Created config for Emote chat");
+            ChatProximity.Log.Info("Created config for Custom Emote chat");
         }
     }
 }
