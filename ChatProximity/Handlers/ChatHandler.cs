@@ -1,18 +1,18 @@
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System;
-using System.Collections.Generic;
-using ChatProximity.Strategies;
+using ChatProximity.Config;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Common.Math;
+using Lumina.Text.ReadOnly;
+using SeString = Dalamud.Game.Text.SeStringHandling.SeString;
+using SeStringBuilder = Lumina.Text.SeStringBuilder;
 
 namespace ChatProximity.Handlers;
 
 internal class ChatHandler(ChatProximity plugin)
 {
-    public const int SayRange = 20;
-
     public ChatProximity Plugin { get; init; } = plugin;
 
     /// <summary>
@@ -29,10 +29,12 @@ internal class ChatHandler(ChatProximity plugin)
             ChatProximity.Log.Verbose("Message considered has handled, abort");
             return;
         }
+        
+        Plugin.Configuration.ChatTypeConfigs.TryGetValue(type, out var config);
 
-        if (type != XivChatType.Say || !Plugin.Configuration.RecolorSayChat)
+        if (config is not { Enabled: true })
         {
-            ChatProximity.Log.Verbose("Not a say message, or config is disabled, abort");
+            ChatProximity.Log.Verbose($"Not supported message or config disabled (config is {config?.Type.ToString() ?? "null"} for type {type})");
             return;
         }
 
@@ -62,9 +64,9 @@ internal class ChatHandler(ChatProximity plugin)
             ChatProximity.Log.Verbose($"Message is {message.ToJson()}");
 
             var distance = GetDistance(currentPlayer->Position, senderCharacter->Position);
-            var colorKey = GetColor(distance);
+            var colorKey = GetColor(distance, config);
 
-            GetStrategy(message).HandleMessage(ref message, colorKey);
+            HandleMessage(ref message, colorKey);
             ChatProximity.Log.Verbose($"New message is {message.ToJson()}");
         }
         catch (Exception e)
@@ -101,16 +103,6 @@ internal class ChatHandler(ChatProximity plugin)
         }
 
         return senderName != null ? CharacterManager.Instance()->LookupBattleCharaByName(senderName, true) : null;
-    }
-    
-    /// <summary>
-    /// Indicates is a message is already touched by Dalamud or another plugin
-    /// </summary>
-    /// <param name="message">The message to check</param>
-    /// <returns>A boolean indicating if the message is dirty or not</returns>
-    private static bool IsMessageDirty(SeString message)
-    {
-        return message.Payloads.Count > 0 && message.Payloads[0].Dirty;
     }
 
     /// <summary>
@@ -156,29 +148,67 @@ internal class ChatHandler(ChatProximity plugin)
             
         return distanceVector.Magnitude;
     }
-    
+
     /// <summary>
     /// Get the color according to distance
     /// </summary>
     /// <param name="distance">The distance between the two players</param>
+    /// <param name="config">The used config for this type</param>
     /// <returns>A UI payload containing the color</returns>
-    private static ushort GetColor(float distance)
+    private static Vector4 GetColor(float distance, ChatTypeConfig config)
     {
-        var colors = new List<ushort> { 1, 2, 3, 4, 5 };
-        var colorIndex = (int)(distance * colors.Count / SayRange);
-        colorIndex = Math.Clamp(colorIndex, 0, colors.Count - 1);  // Ensure index is within bounds
+       var ratio = Math.Clamp(distance / config.Range, 0f, 1f);
 
-        ChatProximity.Log.Debug($"Computed distance: {distance}, index {colorIndex}");
-        return colors[colorIndex];
+        var nearColor = config.NearColor;
+        var farColor = config.FarColor;
+        
+        // Interpolate each component of the color
+        var r = nearColor.X + ((farColor.X - nearColor.X) * ratio);
+        var g = nearColor.Y + ((farColor.Y - nearColor.Y) * ratio);
+        var b = nearColor.Z + ((farColor.Z - nearColor.Z) * ratio);
+        var a = nearColor.W + ((farColor.W - nearColor.W) * ratio);
+
+        var vector = new Vector4(r, g, b, a);
+        ChatProximity.Log.Debug($"Computed distance: {distance}, color {vector}");
+
+        // Return the interpolated color
+        return vector;
     }
-    
+
     /// <summary>
-    /// Get the strategy for message processing
+    /// Handles a dirty message by modifying its payload
     /// </summary>
-    /// <param name="message">The message to process</param>
-    /// <returns>The related strategy</returns>
-    private IMessageHandlerStrategy GetStrategy(SeString message)
+    /// <param name="message">The message to handle</param>
+    /// <param name="color">The computed color</param>
+    private static void HandleMessage(ref SeString message, Vector4 color)
     {
-        return IsMessageDirty(message) ? new DirtyMessageHandlerStrategy() : new NotDirtyMessageHandlerStrategy();
+        var sb = new SeStringBuilder();
+
+        // Extracting and processing payloads
+        for (var i = 0; i < message.Payloads.Count; i++)
+        {
+            var payload = message.Payloads[i];
+
+            if (payload is TextPayload textPayload)
+            {
+                ChatProximity.Log.Verbose($"i = {i}");
+                var previousPayLoad = i > 0 ? message.Payloads[i - 1] : null;
+
+                if (previousPayLoad is UIForegroundPayload { IsEnabled: true } previousPayload)
+                    sb.PushColorType(previousPayload.ColorKey);
+                else
+                    sb.PushColorRgba((byte)(color.X*255), (byte)(color.Y*255), (byte)(color.Z*255), (byte)(color.W*255));
+
+                sb.Append(textPayload.Text);
+                sb.PopColor();
+            }
+            else if (payload is not UIForegroundPayload)
+            {
+                sb.Append(new ReadOnlySeStringSpan(payload.Encode()));
+            }
+        }
+
+        // Update the message with the new payloads
+        message = sb.ToSeString().ToDalamudString();
     }
 }

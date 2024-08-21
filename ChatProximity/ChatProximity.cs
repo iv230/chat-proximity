@@ -1,3 +1,4 @@
+using ChatProximity.Config;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -30,6 +31,7 @@ public sealed class ChatProximity : IDalamudPlugin
     {
         Log.Info("Starting Chat Proximity!");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Configuration.ValidateAndMigrate();
 
         // Windows
         ConfigWindow = new ConfigWindow(this);
@@ -41,8 +43,8 @@ public sealed class ChatProximity : IDalamudPlugin
         // Events
         ChatGui.ChatMessage += HandleMessage;
 
-        PluginInterface.UiBuilder.Draw += DrawUI;
-        PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
+        PluginInterface.UiBuilder.Draw += DrawUi;
+        PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
         // Commands
         CommandManager.AddHandler(CommandName, new CommandInfo(OnChatProxCommand)
@@ -65,7 +67,7 @@ public sealed class ChatProximity : IDalamudPlugin
 
     private void OnChatProxCommand(string command, string args)
     {
-        ToggleConfigUI();
+        ToggleConfigUi();
     }
 
     private void HandleMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -73,7 +75,7 @@ public sealed class ChatProximity : IDalamudPlugin
         ChatHandler.OnMessage(type, ref sender, ref message, ref isHandled);
     }
     
-    private void DrawUI() => WindowSystem.Draw();
+    private void DrawUi() => WindowSystem.Draw();
 
-    public void ToggleConfigUI() => ConfigWindow.Toggle();
+    public void ToggleConfigUi() => ConfigWindow.Toggle();
 }
