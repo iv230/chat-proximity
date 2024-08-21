@@ -23,25 +23,36 @@ public class Configuration : IPluginConfiguration
 
     public void ValidateAndMigrate()
     {
+        Version = 1;
+        
         if (!ChatTypeConfigs.TryGetValue(XivChatType.Say, out _))
         {
             ChatTypeConfigs[XivChatType.Say] = new ChatTypeConfig(XivChatType.Say, true, 20,
                                                                   new Vector4(1f, 1f, 1f, 1f),
-                                                                  new Vector4(0.3f, 0.3f, 0.3f, 1f));
+                                                                  new Vector4(0.23f, 0.23f, 0.23f, 1f));
+            
+            Save();
+            ChatProximity.Log.Info("Created config for Say chat");
         }
         
         if (!ChatTypeConfigs.TryGetValue(XivChatType.Yell, out _))
         {
-            ChatTypeConfigs[XivChatType.Say] = new ChatTypeConfig(XivChatType.Yell, true, 100,
+            ChatTypeConfigs[XivChatType.Yell] = new ChatTypeConfig(XivChatType.Yell, true, 100,
                                                                   new Vector4(1f, 0.85f, 0.01f, 1f),
                                                                   new Vector4(0.29f, 0.25f, 0.11f, 1f));
+            
+            Save();
+            ChatProximity.Log.Info("Created config for Yell chat");
         }
         
         if (!ChatTypeConfigs.TryGetValue(XivChatType.CustomEmote, out _))
         {
-            ChatTypeConfigs[XivChatType.Say] = new ChatTypeConfig(XivChatType.CustomEmote, true, 20,
+            ChatTypeConfigs[XivChatType.CustomEmote] = new ChatTypeConfig(XivChatType.CustomEmote, true, 20,
                                                                   new Vector4(0.72f, 1f, 0.94f, 1f), 
                                                                   new Vector4(0.21f, 0.29f, 0.28f, 1f));
+            
+            Save();
+            ChatProximity.Log.Info("Created config for Emote chat");
         }
     }
 }

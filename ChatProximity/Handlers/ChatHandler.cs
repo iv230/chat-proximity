@@ -34,7 +34,7 @@ internal class ChatHandler(ChatProximity plugin)
 
         if (config is not { Enabled: true })
         {
-            ChatProximity.Log.Verbose($"Not supported message or config disabled (config is {config} for type {type})");
+            ChatProximity.Log.Verbose($"Not supported message or config disabled (config is {config?.Type.ToString() ?? "null"} for type {type})");
             return;
         }
 
@@ -159,8 +159,8 @@ internal class ChatHandler(ChatProximity plugin)
     {
        var ratio = Math.Clamp(distance / config.Range, 0f, 1f);
 
-        var nearColor = config.ClosestColor;
-        var farColor = config.FarthestColor;
+        var nearColor = config.NearColor;
+        var farColor = config.FarColor;
         
         // Interpolate each component of the color
         var r = nearColor.X + ((farColor.X - nearColor.X) * ratio);

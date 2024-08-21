@@ -46,10 +46,10 @@ public class ConfigWindow : Window, IDisposable
     {
         if (ImGui.BeginTable("ChatTypesTable##", 4))
         {
-            ImGui.TableSetupColumn("Channel", ImGuiTableColumnFlags.NoHide);
-            ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.NoHide);
-            ImGui.TableSetupColumn("Closest Color", ImGuiTableColumnFlags.NoHide);
-            ImGui.TableSetupColumn("Farthest Color", ImGuiTableColumnFlags.NoHide);
+            ImGui.TableSetupColumn("Channel", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Near Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed, 320);
+            ImGui.TableSetupColumn("Far Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed, 320);
             ImGui.TableHeadersRow();
 
             ImGuiClip.ClippedDraw(configuration.ChatTypeConfigs.Values.ToList(), DrawChatTableLine, ImGui.GetTextLineHeight() + (3 * ImGui.GetStyle().FramePadding.Y));
@@ -63,8 +63,8 @@ public class ConfigWindow : Window, IDisposable
         using var id = ImRaii.PushId(chatTypeConfig.Type.ToString());
 
         var enabled = chatTypeConfig.Enabled;
-        var closestColor = chatTypeConfig.ClosestColor;
-        var farthestColor = chatTypeConfig.FarthestColor;
+        var closestColor = chatTypeConfig.NearColor;
+        var farthestColor = chatTypeConfig.FarColor;
 
         ImGui.TableNextColumn();
         ImGui.Text(chatTypeConfig.Type.ToString());
@@ -77,16 +77,18 @@ public class ConfigWindow : Window, IDisposable
         }
 
         ImGui.TableNextColumn();
+        ImGui.SetNextItemWidth(-1);
         if (ImGui.ColorEdit4("##closestColor", ref closestColor))
         {
-            chatTypeConfig.ClosestColor = closestColor;
+            chatTypeConfig.NearColor = closestColor;
             configuration.Save();
         }
 
         ImGui.TableNextColumn();
+        ImGui.SetNextItemWidth(-1);
         if (ImGui.ColorEdit4("##farthestColor", ref farthestColor))
         {
-            chatTypeConfig.FarthestColor = farthestColor;
+            chatTypeConfig.FarColor = farthestColor;
             configuration.Save();
         }
     }
