@@ -85,24 +85,21 @@ internal class ChatHandler(ChatProximity plugin)
     private static unsafe BattleChara* GetSender(SeString sender)
     {
         ChatProximity.Log.Verbose($"Sender is {sender.ToJson()}");
-        string? senderName = null;
 
         foreach (var payload in sender.Payloads)
         {
-            if (payload is PlayerPayload playerPayload)
+            var foundSender = payload switch
             {
-                senderName = playerPayload.PlayerName;
-                break;
-            }
+                PlayerPayload playerPayload => CharacterManager.Instance()->LookupBattleCharaByName(playerPayload.PlayerName, true),
+                TextPayload textPayload => CharacterManager.Instance()->LookupBattleCharaByName(textPayload.Text, true),
+                _ => null
+            };
 
-            if (payload is TextPayload textPayload && textPayload.Text == ChatProximity.ClientState.LocalPlayer?.Name.TextValue)
-            {
-                senderName = textPayload.Text;
-                break;
-            }
+            if (foundSender is not null)
+                return foundSender;
         }
 
-        return senderName != null ? CharacterManager.Instance()->LookupBattleCharaByName(senderName, true) : null;
+        return null;
     }
 
     /// <summary>
