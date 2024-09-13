@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Configuration;
 using Dalamud.Game.Text;
-using Lumina.Excel.GeneratedSheets2;
 
 namespace ChatProximity.Config;
 
