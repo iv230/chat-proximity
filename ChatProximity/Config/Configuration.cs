@@ -12,6 +12,7 @@ public class Configuration : IPluginConfiguration
     public int Version { get; set; } = 1;
 
     public bool VerticalIncrease { get; set; } = true;
+    public bool InsideReducer { get; set; } = true;
     public bool AnonymiseNames { get; set; } = true;
     
     public Dictionary<XivChatType, ChatTypeConfig> ChatTypeConfigs { get; set; } = new();

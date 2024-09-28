@@ -28,12 +28,27 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
+        DrawGeneralConfig();
+        DrawChatTable();
+    }
+
+    private void DrawGeneralConfig()
+    {
         var verticalIncrease = configuration.VerticalIncrease;
         if (ImGui.Checkbox("Increase vertical distance incidence", ref verticalIncrease))
         {
             configuration.VerticalIncrease = verticalIncrease;
             configuration.Save();
         }
+        DrawTooltip("(?)", "Enabling this setting increases the importance of vertical distance when calculating proximity. Vertical distances will weigh more heavily when determining chat range, which can be useful in multi-floor or elevated areas.");
+
+        var insideReducer = configuration.VerticalIncrease;
+        if (ImGui.Checkbox("Reduce the chat range while inside a housing", ref insideReducer))
+        {
+            configuration.InsideReducer = insideReducer;
+            configuration.Save();
+        }
+        DrawTooltip("(?)", "When enabled, this option reduces the effective chat range while inside a house or apartment, allowing for more immersive communication by adjusting distance calculations.");
 
         var anonymise = configuration.AnonymiseNames;
         if (ImGui.Checkbox("Anonymise player names in logs", ref anonymise))
@@ -41,8 +56,7 @@ public class ConfigWindow : Window, IDisposable
             configuration.AnonymiseNames = anonymise;
             configuration.Save();
         }
-
-        DrawChatTable();
+        DrawTooltip("(?)", "When this option is enabled, player names will be anonymized in Dalamud's debug logs. This is useful for protecting privacy in logs created for plugin debugging or troubleshooting.");
     }
 
     private void DrawChatTable()
@@ -93,6 +107,19 @@ public class ConfigWindow : Window, IDisposable
         {
             chatTypeConfig.FarColor = farthestColor;
             configuration.Save();
+        }
+    }
+
+    private static void DrawTooltip(String tooltip, String text)
+    {
+        ImGui.SameLine();
+        ImGui.TextDisabled(tooltip);
+        if (ImGui.IsItemHovered())
+        { 
+            ImGui.SetNextWindowSize(new Vector2(300, 0), ImGuiCond.Always);
+            ImGui.BeginTooltip();
+            ImGui.TextWrapped(text);
+            ImGui.EndTooltip();
         }
     }
 }

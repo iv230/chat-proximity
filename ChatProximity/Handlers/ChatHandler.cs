@@ -4,6 +4,7 @@ using System;
 using ChatProximity.Config;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Lumina.Text.ReadOnly;
 using SeString = Dalamud.Game.Text.SeStringHandling.SeString;
@@ -140,7 +141,14 @@ internal class ChatHandler(ChatProximity plugin)
 
         if (Plugin.Configuration.VerticalIncrease)
         {
+            ChatProximity.Log.Verbose("Increasing vertical incidence");
             distanceVector.Y *= 2;   
+        }
+
+        if (Plugin.Configuration.InsideReducer && IsIndoor())
+        {
+            ChatProximity.Log.Verbose("Indoor, increasing distance");
+            distanceVector *= 2;
         }
             
         return distanceVector.Magnitude;
@@ -207,5 +215,14 @@ internal class ChatHandler(ChatProximity plugin)
 
         // Update the message with the new payloads
         message = sb.ToSeString().ToDalamudString();
+    }
+
+    /// <summary>
+    /// Indicates whenever or ot the local player is indoor
+    /// </summary>
+    /// <returns>A boolean indicating if the player is indoor</returns>
+    private static unsafe bool IsIndoor()
+    {
+        return HousingManager.Instance()->IsInside();
     }
 }
