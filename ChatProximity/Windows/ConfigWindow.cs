@@ -42,7 +42,7 @@ public class ConfigWindow : Window, IDisposable
         }
         DrawTooltip("(?)", "Enabling this setting increases the importance of vertical distance when calculating proximity. Vertical distances will weigh more heavily when determining chat range, which can be useful in multi-floor or elevated areas.");
 
-        var insideReducer = configuration.VerticalIncrease;
+        var insideReducer = configuration.InsideReducer;
         if (ImGui.Checkbox("Reduce the chat range while inside a housing", ref insideReducer))
         {
             configuration.InsideReducer = insideReducer;
