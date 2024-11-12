@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="Dalamud.Plugin.Bootstrap.targets" />
+    <Import Project="Dalamud.Plugin.Bootstrap.targets"/>
 
-  <PropertyGroup>
-    <Version>1.1.1</Version>
-    <Description>Know how far they talk from.</Description>
-    <PackageProjectUrl>https://github.com/iv230/chat-proximity</PackageProjectUrl>
-    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
-    
+    <PropertyGroup>
+        <Version>1.1.2</Version>
+        <Description>Know how far they talk from.</Description>
+        <PackageProjectUrl>https://github.com/iv230/chat-proximity</PackageProjectUrl>
+        <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
     <ItemGroup>
+        <PackageReference Update="DalamudPackager" Version="11.0.0"/>
         <Reference Include="Lumina">
             <HintPath>$(DalamudLibPath)\Lumina.dll</HintPath>
             <Private>false</Private>
