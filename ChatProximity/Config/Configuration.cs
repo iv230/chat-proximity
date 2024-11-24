@@ -6,6 +6,7 @@ using Dalamud.Game.Text;
 
 namespace ChatProximity.Config;
 
+// ReSharper disable RedundantDefaultMemberInitializer
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
@@ -14,9 +15,7 @@ public class Configuration : IPluginConfiguration
     public bool VerticalIncrease { get; set; } = true;
     public bool InsideReducer { get; set; } = true;
     public bool RecolorTargeting { get; set; } = false;
-    public Vector4 TargetingColor { get; set; } = new Vector4(0.39f, 0.84f, 0.39f, 1f);
     public bool RecolorTargeted { get; set; } = false;
-    public Vector4 TargetedColor { get; set; } = new Vector4(0.39f, 0.64f, 0.84f, 1f);
     public bool AnonymiseNames { get; set; } = true;
     
     public Dictionary<XivChatType, ChatTypeConfig> ChatTypeConfigs { get; set; } = new();
@@ -31,50 +30,107 @@ public class Configuration : IPluginConfiguration
     {
         Version = 1;
         var updated = false;
-        
-        if (!ChatTypeConfigs.TryGetValue(XivChatType.Say, out _))
-        {
-            ChatTypeConfigs[XivChatType.Say] = new ChatTypeConfig(XivChatType.Say, true, 20,
-                                                                  new Vector4(1f, 1f, 1f, 1f),
-                                                                  new Vector4(0.23f, 0.23f, 0.23f, 1f));
 
-            updated = true;
-            ChatProximity.Log.Info("Created config for Say chat");
-        }
-        
-        if (!ChatTypeConfigs.TryGetValue(XivChatType.Yell, out _))
-        {
-            ChatTypeConfigs[XivChatType.Yell] = new ChatTypeConfig(XivChatType.Yell, true, 100,
-                                                                  new Vector4(1f, 0.85f, 0.01f, 1f),
-                                                                  new Vector4(0.29f, 0.25f, 0.01f, 1f));
-            
-            updated = true;
-            ChatProximity.Log.Info("Created config for Yell chat");
-        }
-        
-        if (!ChatTypeConfigs.TryGetValue(XivChatType.StandardEmote, out _))
-        {
-            ChatTypeConfigs[XivChatType.StandardEmote] = new ChatTypeConfig(XivChatType.StandardEmote, true, 20,
-                                                                          new Vector4(0.72f, 1f, 0.94f, 1f), 
-                                                                          new Vector4(0.21f, 0.29f, 0.28f, 1f));
-            
-            updated = true;
-            ChatProximity.Log.Info("Created config for Standard Emote chat");
-        }
-        
-        if (!ChatTypeConfigs.TryGetValue(XivChatType.CustomEmote, out _))
-        {
-            ChatTypeConfigs[XivChatType.CustomEmote] = new ChatTypeConfig(XivChatType.CustomEmote, true, 20,
-                                                                  new Vector4(0.72f, 1f, 0.94f, 1f), 
-                                                                  new Vector4(0.21f, 0.29f, 0.28f, 1f));
-            
-            updated = true;
-            ChatProximity.Log.Info("Created config for Custom Emote chat");
-        }
+        // Default configurations for each chat type
+        EnsureChatTypeConfig(
+            XivChatType.Say, 
+            true, 
+            20, 
+            new Vector4(1f, 1f, 1f, 1f),
+            new Vector4(0.23f, 0.23f, 0.23f, 1f),
+            new Vector4(0.5f, 0.8f, 1f, 1f),
+            new Vector4(0.6f, 1f, 0.7f, 1f),
+            ref updated
+        );
+
+        EnsureChatTypeConfig(
+            XivChatType.Yell, 
+            true, 
+            100, 
+            new Vector4(1f, 0.85f, 0.01f, 1f),
+            new Vector4(0.29f, 0.25f, 0.01f, 1f),
+            new Vector4(1f, 0.6f, 0.3f, 1f),
+            new Vector4(1f, 0.4f, 0.6f, 1f),
+            ref updated
+        );
+
+        EnsureChatTypeConfig(
+            XivChatType.StandardEmote, 
+            true, 
+            20, 
+            new Vector4(0.72f, 1f, 0.94f, 1f), 
+            new Vector4(0.21f, 0.29f, 0.28f, 1f), 
+            new Vector4(0.8f, 0.9f, 0.5f, 1f),
+            new Vector4(0.6f, 0.7f, 1f, 1f),
+            ref updated
+        );
+
+        EnsureChatTypeConfig(
+            XivChatType.CustomEmote, 
+            true, 
+            20, 
+            new Vector4(0.72f, 1f, 0.94f, 1f), 
+            new Vector4(0.21f, 0.29f, 0.28f, 1f), 
+            new Vector4(0.8f, 0.9f, 0.5f, 1f),
+            new Vector4(0.6f, 0.7f, 1f, 1f),
+            ref updated
+        );
 
         if (updated)
         {
             Save();
+        }
+    }
+
+    private void EnsureChatTypeConfig(XivChatType chatType, bool enabled, float range, Vector4 nearColor, Vector4 farColor, Vector4 targetingColor, Vector4 targetedColor, ref bool updated)
+    {
+        if (!ChatTypeConfigs.TryGetValue(chatType, out var config))
+        {
+            ChatTypeConfigs[chatType] = new ChatTypeConfig(chatType, enabled, range, nearColor, farColor, targetingColor, targetedColor);
+            ChatProximity.Log.Info($"Created config for {chatType} chat");
+            updated = true;
+        }
+        else
+        {
+            // Migrate existing config to ensure it has the new properties
+            var migrated = false;
+
+            if (config.Enabled == default)
+            {
+                config.Enabled = enabled;
+                migrated = true;
+            }
+            if (config.Range == default)
+            {
+                config.Range = range;
+                migrated = true;
+            }
+            if (config.NearColor == default)
+            {
+                config.NearColor = nearColor;
+                migrated = true;
+            }
+            if (config.FarColor == default)
+            {
+                config.FarColor = farColor;
+                migrated = true;
+            }
+            if (config.TargetingColor == default)
+            {
+                config.TargetingColor = targetingColor;
+                migrated = true;
+            }
+            if (config.TargetedColor == default)
+            {
+                config.TargetedColor = targetedColor;
+                migrated = true;
+            }
+
+            if (migrated)
+            {
+                ChatProximity.Log.Info($"Migrated config for {chatType} chat to include new colors.");
+                updated = true;
+            }
         }
     }
 }

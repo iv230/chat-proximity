@@ -56,8 +56,7 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
         DrawTooltip("(?)", "When enabled, this option reduces the effective chat range while inside a house or apartment, allowing for more immersive communication by adjusting distance calculations.");
-        
-        // RecolorTargeting logic
+
         var recolorTargeting = configuration.RecolorTargeting;
         if (ImGui.Checkbox("Recolor message when targeting sender", ref recolorTargeting))
         {
@@ -65,15 +64,7 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
         DrawTooltip("(?)", "When enabled, messages sent by a player you are targeting will have a specific color, allowing better identification of their messages.");
-        ImGui.SameLine();
-        var targetingColor = configuration.TargetingColor;
-        if (ImGui.ColorEdit4("##TargetingColor", ref targetingColor, ImGuiColorEditFlags.NoInputs))
-        {
-            configuration.TargetingColor = targetingColor;
-            configuration.Save();
-        }
 
-        // RecolorTargeted logic
         var recolorTargeted = configuration.RecolorTargeted;
         if (ImGui.Checkbox("Recolor message when sender targets you", ref recolorTargeted))
         {
@@ -81,13 +72,6 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
         DrawTooltip("(?)", "When enabled, messages from a player targeting you will have a specific color, making them easier to identify.");
-        ImGui.SameLine();
-        var targetedColor = configuration.TargetedColor;
-        if (ImGui.ColorEdit4("##TargetedColor", ref targetedColor, ImGuiColorEditFlags.NoInputs))
-        {
-            configuration.TargetedColor = targetedColor;
-            configuration.Save();
-        }
 
         var anonymise = configuration.AnonymiseNames;
         if (ImGui.Checkbox("Anonymise player names in logs", ref anonymise))
@@ -100,12 +84,24 @@ public class ConfigWindow : Window, IDisposable
 
     private void DrawChatTable()
     {
-        if (ImGui.BeginTable("ChatTypesTable##", 4))
+        var columnCount = 4;
+
+        if (configuration.RecolorTargeting) columnCount++;
+        if (configuration.RecolorTargeted) columnCount++;
+
+        if (ImGui.BeginTable("ChatTypesTable##", columnCount))
         {
             ImGui.TableSetupColumn("Channel", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Near Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Far Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+
+            if (configuration.RecolorTargeting)
+                ImGui.TableSetupColumn("Targeting Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+
+            if (configuration.RecolorTargeted)
+                ImGui.TableSetupColumn("Targeted Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+
             ImGui.TableHeadersRow();
 
             ImGuiClip.ClippedDraw(configuration.ChatTypeConfigs.Values.ToList(), DrawChatTableLine, ImGui.GetTextLineHeight() + (3 * ImGui.GetStyle().FramePadding.Y));
@@ -121,6 +117,8 @@ public class ConfigWindow : Window, IDisposable
         var enabled = chatTypeConfig.Enabled;
         var closestColor = chatTypeConfig.NearColor;
         var farthestColor = chatTypeConfig.FarColor;
+        var targetingColor = chatTypeConfig.TargetingColor;
+        var targetedColor = chatTypeConfig.TargetedColor;
 
         ImGui.TableNextColumn();
         ImGui.Text(chatTypeConfig.Type.ToString());
@@ -146,6 +144,28 @@ public class ConfigWindow : Window, IDisposable
         {
             chatTypeConfig.FarColor = farthestColor;
             configuration.Save();
+        }
+
+        if (configuration.RecolorTargeting)
+        {
+            ImGui.TableNextColumn();
+            ImGui.SetNextItemWidth(-1);
+            if (ImGui.ColorEdit4("##targetingColor", ref targetingColor, ImGuiColorEditFlags.NoInputs))
+            {
+                chatTypeConfig.TargetingColor = targetingColor;
+                configuration.Save();
+            }
+        }
+
+        if (configuration.RecolorTargeted)
+        {
+            ImGui.TableNextColumn();
+            ImGui.SetNextItemWidth(-1);
+            if (ImGui.ColorEdit4("##targetedColor", ref targetedColor, ImGuiColorEditFlags.NoInputs))
+            {
+                chatTypeConfig.TargetedColor = targetedColor;
+                configuration.Save();
+            }
         }
     }
 

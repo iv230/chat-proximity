@@ -43,7 +43,8 @@ internal class ChatHandler(ChatProximity plugin)
         try
         {
             var currentCharacter = (BattleChara*)(ChatProximity.ClientState.LocalPlayer?.Address ?? 0);
-            if (currentCharacter == null) {
+            if (currentCharacter == null)
+            {
                 ChatProximity.Log.Warning("Current player is null");
                 return;
             }
@@ -61,39 +62,41 @@ internal class ChatHandler(ChatProximity plugin)
                 return;
             }
 
-            ChatProximity.Log.Debug($"IDS:\ncurrentCharacter is {currentCharacter->EntityId} and targets {currentCharacter->GetTargetId().ObjectId}\nsenderCharacter is {senderCharacter->EntityId} and targets {senderCharacter->GetTargetId().ObjectId}");
+            RecolorMode recolorMode;
+            float? distance = null;
 
-            Vector4 colorKey;
-
-            if (Plugin.Configuration.RecolorTargeted && currentCharacter->EntityId == senderCharacter->GetTargetId().ObjectId)
+            if (Plugin.Configuration.RecolorTargeted &&
+                currentCharacter->EntityId == senderCharacter->GetTargetId().ObjectId)
             {
-                ChatProximity.Log.Debug("Sender is targeting, recolor");
-                colorKey = Plugin.Configuration.TargetedColor;
+                recolorMode = RecolorMode.Targeting;
             }
-            else if (Plugin.Configuration.RecolorTargeting && currentCharacter->GetTargetId().ObjectId == senderCharacter->EntityId)
+            else if (Plugin.Configuration.RecolorTargeting &&
+                     currentCharacter->GetTargetId().ObjectId == senderCharacter->EntityId)
             {
-                ChatProximity.Log.Debug("Targeting sender, recolor");
-                colorKey = Plugin.Configuration.TargetingColor;
+                recolorMode = RecolorMode.Targeted;
             }
             else
             {
-                ChatProximity.Log.Debug("Recoloring over distance");
-                var distance = GetDistance(currentCharacter->Position, senderCharacter->Position);
-                colorKey = GetColor(distance, config);
+                recolorMode = RecolorMode.Distance;
+                distance = GetDistance(currentCharacter->Position, senderCharacter->Position);
             }
 
             ChatProximity.Log.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->NameString)}");
             ChatProximity.Log.Verbose($"Message is {message.ToJson()}");
 
+            var colorKey = GetColor(recolorMode, config, distance);
             HandleMessage(ref message, colorKey);
+
             ChatProximity.Log.Verbose($"New message is {message.ToJson()}");
         }
         catch (Exception e)
         {
             ChatProximity.Log.Error(e, "Exception while processing message");
         }
-
-        ChatProximity.Log.Debug("Finished processing message");
+        finally
+        {
+            ChatProximity.Log.Debug("Finished processing message");   
+        }
     }
 
     /// <summary>
@@ -173,29 +176,43 @@ internal class ChatHandler(ChatProximity plugin)
     }
 
     /// <summary>
-    /// Get the color according to distance
+    /// Get the color according to the mode and pre-calculated data.
     /// </summary>
-    /// <param name="distance">The distance between the two players</param>
+    /// <param name="mode">The coloring mode</param>
     /// <param name="config">The used config for this type</param>
+    /// <param name="distance">The pre-calculated distance (if applicable)</param>
     /// <returns>A UI payload containing the color</returns>
-    private static Vector4 GetColor(float distance, ChatTypeConfig config)
+    private static Vector4 GetColor(RecolorMode mode, ChatTypeConfig config, float? distance = null)
     {
-       var ratio = Math.Clamp(distance / config.Range, 0f, 1f);
+        switch (mode)
+        {
+            case RecolorMode.Distance:
+                if (distance == null)
+                    throw new ArgumentException("Distance must be provided for RecolorMode.Distance");
 
-        var nearColor = config.NearColor;
-        var farColor = config.FarColor;
-        
-        // Interpolate each component of the color
-        var r = nearColor.X + ((farColor.X - nearColor.X) * ratio);
-        var g = nearColor.Y + ((farColor.Y - nearColor.Y) * ratio);
-        var b = nearColor.Z + ((farColor.Z - nearColor.Z) * ratio);
-        var a = nearColor.W + ((farColor.W - nearColor.W) * ratio);
+                var ratio = Math.Clamp(distance.Value / config.Range, 0f, 1f);
 
-        var vector = new Vector4(r, g, b, a);
-        ChatProximity.Log.Debug($"Computed distance: {distance}, color {vector}");
+                var nearColor = config.NearColor;
+                var farColor = config.FarColor;
 
-        // Return the interpolated color
-        return vector;
+                // Interpolate each component of the color
+                return new Vector4(
+                    nearColor.X + ((farColor.X - nearColor.X) * ratio),
+                    nearColor.Y + ((farColor.Y - nearColor.Y) * ratio),
+                    nearColor.Z + ((farColor.Z - nearColor.Z) * ratio),
+                    nearColor.W + ((farColor.W - nearColor.W) * ratio)
+                );
+
+            case RecolorMode.Targeting:
+                return config.TargetingColor;
+
+            case RecolorMode.Targeted:
+                return config.TargetedColor;
+
+            case RecolorMode.None:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+        }
     }
 
     /// <summary>
