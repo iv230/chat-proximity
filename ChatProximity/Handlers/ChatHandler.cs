@@ -42,8 +42,8 @@ internal class ChatHandler(ChatProximity plugin)
         ChatProximity.Log.Debug($"Caught {type} message from {GetPlayerNameForLog(sender.TextValue)}: {GetMessageForLog(message)}");
         try
         {
-            var currentPlayer = (BattleChara*)(ChatProximity.ClientState.LocalPlayer?.Address ?? 0);
-            if (currentPlayer == null) {
+            var currentCharacter = (BattleChara*)(ChatProximity.ClientState.LocalPlayer?.Address ?? 0);
+            if (currentCharacter == null) {
                 ChatProximity.Log.Warning("Current player is null");
                 return;
             }
@@ -55,17 +55,35 @@ internal class ChatHandler(ChatProximity plugin)
                 return;
             }
 
-            if (senderCharacter == currentPlayer)
+            if (senderCharacter == currentCharacter)
             {
                 ChatProximity.Log.Debug("Self message, no color change");
                 return;
             }
 
+            ChatProximity.Log.Debug($"IDS:\ncurrentCharacter is {currentCharacter->EntityId} and targets {currentCharacter->GetTargetId().ObjectId}\nsenderCharacter is {senderCharacter->EntityId} and targets {senderCharacter->GetTargetId().ObjectId}");
+
+            Vector4 colorKey;
+
+            if (Plugin.Configuration.RecolorTargeted && currentCharacter->EntityId == senderCharacter->GetTargetId().ObjectId)
+            {
+                ChatProximity.Log.Debug("Sender is targeting, recolor");
+                colorKey = Plugin.Configuration.TargetedColor;
+            }
+            else if (Plugin.Configuration.RecolorTargeting && currentCharacter->GetTargetId().ObjectId == senderCharacter->EntityId)
+            {
+                ChatProximity.Log.Debug("Targeting sender, recolor");
+                colorKey = Plugin.Configuration.TargetingColor;
+            }
+            else
+            {
+                ChatProximity.Log.Debug("Recoloring over distance");
+                var distance = GetDistance(currentCharacter->Position, senderCharacter->Position);
+                colorKey = GetColor(distance, config);
+            }
+
             ChatProximity.Log.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->NameString)}");
             ChatProximity.Log.Verbose($"Message is {message.ToJson()}");
-
-            var distance = GetDistance(currentPlayer->Position, senderCharacter->Position);
-            var colorKey = GetColor(distance, config);
 
             HandleMessage(ref message, colorKey);
             ChatProximity.Log.Verbose($"New message is {message.ToJson()}");

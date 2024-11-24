@@ -13,6 +13,10 @@ public class Configuration : IPluginConfiguration
 
     public bool VerticalIncrease { get; set; } = true;
     public bool InsideReducer { get; set; } = true;
+    public bool RecolorTargeting { get; set; } = false;
+    public Vector4 TargetingColor { get; set; } = new Vector4(0.39f, 0.84f, 0.39f, 1f);
+    public bool RecolorTargeted { get; set; } = false;
+    public Vector4 TargetedColor { get; set; } = new Vector4(0.39f, 0.64f, 0.84f, 1f);
     public bool AnonymiseNames { get; set; } = true;
     
     public Dictionary<XivChatType, ChatTypeConfig> ChatTypeConfigs { get; set; } = new();
