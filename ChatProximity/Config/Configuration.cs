@@ -16,6 +16,7 @@ public class Configuration : IPluginConfiguration
     public bool InsideReducer { get; set; } = true;
     public bool RecolorTargeting { get; set; } = false;
     public bool RecolorTargeted { get; set; } = false;
+    public bool EditThreshold { get; set; } = false;
     public bool AnonymiseNames { get; set; } = true;
     
     public Dictionary<XivChatType, ChatTypeConfig> ChatTypeConfigs { get; set; } = new();
@@ -82,6 +83,14 @@ public class Configuration : IPluginConfiguration
         }
     }
 
+    public void ResetAllThreshold()
+    {
+        foreach (var (_, config) in ChatTypeConfigs)
+        {
+            config.Threshold = config.Range;
+        }
+    }
+
     private void EnsureChatTypeConfig(XivChatType chatType, bool enabled, float range, Vector4 nearColor, Vector4 farColor, Vector4 targetingColor, Vector4 targetedColor, ref bool updated)
     {
         if (!ChatTypeConfigs.TryGetValue(chatType, out var config))
@@ -100,7 +109,7 @@ public class Configuration : IPluginConfiguration
                 config.Enabled = enabled;
                 migrated = true;
             }
-            if (config.Range == default)
+            if (Math.Abs(config.Range - 0) < 0.0001f)
             {
                 config.Range = range;
                 migrated = true;
@@ -125,10 +134,15 @@ public class Configuration : IPluginConfiguration
                 config.TargetedColor = targetedColor;
                 migrated = true;
             }
+            if (Math.Abs(config.Threshold - 0) < 0.0001f)
+            {
+                config.Threshold = range;
+                migrated = true;
+            }
 
             if (migrated)
             {
-                ChatProximity.Log.Info($"Migrated config for {chatType} chat to include new colors.");
+                ChatProximity.Log.Info($"Migrated config for {chatType} chat to include new options.");
                 updated = true;
             }
         }

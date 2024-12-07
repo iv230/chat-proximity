@@ -9,6 +9,7 @@ using ChatProximity.Windows;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using ChatProximity.Handlers;
+using ChatProximity.Service;
 
 namespace ChatProximity;
 
@@ -25,6 +26,7 @@ public sealed class ChatProximity : IDalamudPlugin
     public readonly WindowSystem WindowSystem = new("ChatProximity");
 
     public Configuration Configuration { get; init; }
+    public ChatMessageService ChatMessageService { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
     private ChatHandler ChatHandler { get; init; }
     private ChatProxCommand ChatProxCommand { get; init; }
@@ -44,6 +46,9 @@ public sealed class ChatProximity : IDalamudPlugin
         
         // Commands
         ChatProxCommand = new ChatProxCommand(this, CommandName);
+        
+        // Services
+        ChatMessageService = new ChatMessageService();
 
         // Events
         ChatGui.ChatMessage += HandleMessage;

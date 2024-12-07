@@ -18,7 +18,8 @@ public enum ConfOptions
     Inside,
     Targeting,
     Targeted,
-    Anonymize
+    Anonymize,
+    Threshold,
 }
 
 public enum ChatOptions
@@ -27,7 +28,8 @@ public enum ChatOptions
     Near,
     Far,
     Targeting,
-    Targeted
+    Targeted,
+    Threshold,
 }
 
 public class ChatProxCommand(ChatProximity plugin, string commandName)
@@ -49,7 +51,7 @@ public class ChatProxCommand(ChatProximity plugin, string commandName)
             return;
         }
 
-        ChatProximity.Log.Debug($"Command: {command}, parameters: {parameters}");
+        ChatProximity.Log.Debug($"Command: {command}, parameters: {string.Join(", ", parameters)}");
 
         switch (command)
         {
@@ -64,6 +66,8 @@ public class ChatProxCommand(ChatProximity plugin, string commandName)
             case GeneralOptions.Chat:
                 HandleChatCommand(parameters);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(command), command, null);
         }
     }
 
@@ -132,6 +136,11 @@ public class ChatProxCommand(ChatProximity plugin, string commandName)
             case ConfOptions.Anonymize:
                 plugin.Configuration.AnonymiseNames = ToggleOption(plugin.Configuration.AnonymiseNames, newState);
                 ChatProximity.ChatGui.Print($"Anonymize names set to: {plugin.Configuration.AnonymiseNames}");
+                break;
+
+            case ConfOptions.Threshold:
+                plugin.Configuration.EditThreshold = ToggleOption(plugin.Configuration.EditThreshold, newState);
+                ChatProximity.ChatGui.Print($"Threshold editing set to: {plugin.Configuration.EditThreshold}");
                 break;
 
             default:
@@ -205,9 +214,24 @@ public class ChatProxCommand(ChatProximity plugin, string commandName)
                     case ChatOptions.Targeted:
                         config.TargetedColor = color;
                         break;
+                    case ChatOptions.Enabled:
+                    case ChatOptions.Threshold:
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(option), option, null);
                 }
 
                 ChatProximity.ChatGui.Print($"Chat type {chatType} {option.ToString().ToLower()} color set to: {parameters[2]} {parameters[3]} {parameters[4]}");
+                break;
+
+            case ChatOptions.Threshold:
+                if (parameters.Length < 3 || !float.TryParse(parameters[2], out var newThreshold))
+                {
+                    ChatProximity.ChatGui.Print($"Usage: {commandName} chat {chatType} threshold <value>");
+                    return;
+                }
+
+                config.Threshold = Math.Clamp(newThreshold, 0f, plugin.Configuration.ChatTypeConfigs[chatType].Range);
+                ChatProximity.ChatGui.Print($"Chat type {chatType} threshold set to: {newThreshold}");
                 break;
 
             default:
