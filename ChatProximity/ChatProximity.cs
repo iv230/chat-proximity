@@ -1,3 +1,4 @@
+using ChatProximity.Commands;
 using ChatProximity.Config;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
@@ -26,6 +27,7 @@ public sealed class ChatProximity : IDalamudPlugin
     public Configuration Configuration { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
     private ChatHandler ChatHandler { get; init; }
+    private ChatProxCommand ChatProxCommand { get; init; }
 
     public ChatProximity()
     {
@@ -39,6 +41,9 @@ public sealed class ChatProximity : IDalamudPlugin
 
         // Handlers
         ChatHandler = new ChatHandler(this);
+        
+        // Commands
+        ChatProxCommand = new ChatProxCommand(this, CommandName);
 
         // Events
         ChatGui.ChatMessage += HandleMessage;
@@ -49,7 +54,7 @@ public sealed class ChatProximity : IDalamudPlugin
         // Commands
         CommandManager.AddHandler(CommandName, new CommandInfo(OnChatProxCommand)
         {
-            HelpMessage = "Open settings"
+            HelpMessage = "(Without arguments) Open settings (With arguments) help for more information."
         });
     }
 
@@ -67,7 +72,14 @@ public sealed class ChatProximity : IDalamudPlugin
 
     private void OnChatProxCommand(string command, string args)
     {
-        ToggleConfigUi();
+        if (args.Length == 0)
+        {
+            ToggleConfigUi();   
+        }
+        else
+        {
+            ChatProxCommand.OnCommand(args);
+        }
     }
 
     private void HandleMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
