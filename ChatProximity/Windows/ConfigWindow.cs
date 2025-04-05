@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using ChatProximity.Config;
@@ -40,6 +41,14 @@ public class ConfigWindow : Window, IDisposable
         ImGui.TextUnformatted("Chat Color Configuration");
         ImGui.Spacing();
         DrawChatTable();
+
+        ImGui.Spacing();
+        ImGui.Text(" ");
+        ImGui.SameLine();
+        if (ImGui.Button("Support Iris on Ko-fi :3"))
+        {
+            Process.Start(new ProcessStartInfo {FileName = "https://ko-fi.com/iriswhm", UseShellExecute = true});
+        }
     }
 
     /// <summary>
