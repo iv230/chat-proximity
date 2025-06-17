@@ -3,26 +3,24 @@ using Dalamud.Game.Text;
 
 namespace ChatProximity.Config;
 
-public class ChatTypeConfig
+public class ChatTypeConfig(
+    XivChatType type,
+    bool enabled,
+    float range,
+    Vector4 nearColor = new(),
+    Vector4 farColor = new(),
+    Vector4 targetingColor = new(),
+    Vector4 targetedColor = new(),
+    Vector4 focusTargetColor = new(),
+    float threshold = 0f)
 {
-    public ChatTypeConfig(XivChatType type, bool enabled, float range, Vector4 nearColor = new(), Vector4 farColor = new(), Vector4 targetingColor = new(), Vector4 targetedColor = new(), float threshold = 0f)
-    {
-        Type = type;
-        Enabled = enabled;
-        Range = range;
-        NearColor = nearColor;
-        FarColor = farColor;
-        TargetingColor = targetingColor;
-        TargetedColor = targetedColor;
-        Threshold = threshold > 0 ? threshold : range;
-    }
-
-    public XivChatType Type { get; set; }
-    public bool Enabled { get; set; }
-    public float Range { get; set; }
-    public Vector4 NearColor { get; set; }
-    public Vector4 FarColor { get; set; }
-    public Vector4 TargetingColor { get; set; }
-    public Vector4 TargetedColor { get; set; }
-    public float Threshold { get; set; }
+    public XivChatType Type { get; set; } = type;
+    public bool Enabled { get; set; } = enabled;
+    public float Range { get; set; } = range;
+    public Vector4 NearColor { get; set; } = nearColor;
+    public Vector4 FarColor { get; set; } = farColor;
+    public Vector4 TargetingColor { get; set; } = targetingColor;
+    public Vector4 TargetedColor { get; set; } = targetedColor;
+    public Vector4 FocusTargetColor { get; set; } = focusTargetColor;
+    public float Threshold { get; set; } = threshold > 0 ? threshold : range;
 }

@@ -81,8 +81,7 @@ public class ConfigWindow : Window, IDisposable
             configuration.RecolorTargeting = recolorTargeting;
             configuration.Save();
         }
-        DrawTooltip("(?)", "When enabled, messages sent by a player you are targeting will have a specific color," +
-                           " allowing better identification of their messages.");
+        DrawTooltip("(?)", "When enabled, messages sent by a player you are targeting will have a specific color.");
 
         var recolorTargeted = configuration.RecolorTargeted;
         if (ImGui.Checkbox("Recolor message when sender targets you", ref recolorTargeted))
@@ -90,9 +89,17 @@ public class ConfigWindow : Window, IDisposable
             configuration.RecolorTargeted = recolorTargeted;
             configuration.Save();
         }
-        DrawTooltip("(?)", "When enabled, messages from a player targeting you will have a specific color, making" +
-                           " them easier to identify.");
+        DrawTooltip("(?)", "When enabled, messages from a player targeting you will have a specific color.");
         
+        var recolorFocusTarget = configuration.RecolorFocusTarget;
+        if (ImGui.Checkbox("Recolor message when sender is your focus target", ref recolorFocusTarget))
+        {
+            configuration.RecolorFocusTarget = recolorFocusTarget;
+            configuration.Save();
+        }
+        DrawTooltip("(?)", "When enabled, messages from a player you have in focus target you will have a " +
+                           "specific color.");
+
         var editThreshold = configuration.EditThreshold;
         if (ImGui.Checkbox("Edit Threshold (Dangerous)", ref editThreshold))
         {
@@ -132,6 +139,7 @@ public class ConfigWindow : Window, IDisposable
         if (configuration.RecolorTargeting) columnCount++;
         if (configuration.RecolorTargeted) columnCount++;
         if (configuration.EditThreshold) columnCount++;
+        if (configuration.RecolorFocusTarget) columnCount++;
 
         if (ImGui.BeginTable("ChatTypesTable##", columnCount))
         {
@@ -145,6 +153,9 @@ public class ConfigWindow : Window, IDisposable
 
             if (configuration.RecolorTargeted)
                 ImGui.TableSetupColumn("Targeted Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+            
+            if (configuration.RecolorFocusTarget)
+                ImGui.TableSetupColumn("Focus Target Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
 
             ImGui.TableSetupColumn("Threshold", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
 
@@ -173,6 +184,7 @@ public class ConfigWindow : Window, IDisposable
         var farthestColor = chatTypeConfig.FarColor;
         var targetingColor = chatTypeConfig.TargetingColor;
         var targetedColor = chatTypeConfig.TargetedColor;
+        var focusTargetColor = chatTypeConfig.FocusTargetColor;
 
         ImGui.TableNextColumn();
         ImGui.Text(chatTypeConfig.Type.ToString());
@@ -218,6 +230,17 @@ public class ConfigWindow : Window, IDisposable
             if (ImGui.ColorEdit4("##targetedColor", ref targetedColor, ImGuiColorEditFlags.NoInputs))
             {
                 chatTypeConfig.TargetedColor = targetedColor;
+                configuration.Save();
+            }
+        }
+        
+        if (configuration.RecolorFocusTarget)
+        {
+            ImGui.TableNextColumn();
+            ImGui.SetNextItemWidth(-1);
+            if (ImGui.ColorEdit4("##focusTargetColor", ref focusTargetColor, ImGuiColorEditFlags.NoInputs))
+            {
+                chatTypeConfig.FocusTargetColor = focusTargetColor;
                 configuration.Save();
             }
         }

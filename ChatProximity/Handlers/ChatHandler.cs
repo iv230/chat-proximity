@@ -33,14 +33,16 @@ internal class ChatHandler(ChatProximity plugin)
 
         if (config is not { Enabled: true })
         {
-            ChatProximity.Log.Verbose($"Not supported message or config disabled (config is {config?.Type.ToString() ?? "null"} for type {type})");
+            ChatProximity.Log.Verbose($"Not supported message or config disabled" +
+                                      $"(config is {config?.Type.ToString() ?? "null"} for type {type})");
             return;
         }
 
-        ChatProximity.Log.Debug($"Caught {type} message from {GetPlayerNameForLog(sender.TextValue)}: {GetMessageForLog(message)}");
+        ChatProximity.Log.Debug($"Caught {type} message from" +
+                                $"{GetPlayerNameForLog(sender.TextValue)}: {GetMessageForLog(message)}");
         try
         {
-            var currentCharacter = (BattleChara*)(ChatProximity.ClientState.LocalPlayer?.Address ?? 0);
+            var currentCharacter = CharacterService.GetLocalPlayer();
             if (currentCharacter == null)
             {
                 ChatProximity.Log.Warning("Current player is null");
@@ -64,13 +66,27 @@ internal class ChatHandler(ChatProximity plugin)
 
             if (Plugin.Configuration.EditThreshold && distance > config.Threshold)
             {
-                ChatProximity.Log.Info($"Messaged dropped: [{type.ToString()}] {GetPlayerNameForLog(senderCharacter->NameString)} : {message.TextValue}");
+                ChatProximity.Log.Info($"Messaged dropped: [{type.ToString()}] " +
+                                       $"{GetPlayerNameForLog(senderCharacter->NameString)} : {message.TextValue}");
                 ChatProximity.Log.Debug($"Distance {distance} exceeds threshold {config.Threshold}");
                 ChatMessageService.DropMessage(ref message, ref isHandled);
                 return;
             }
 
+            var focusedCharacter = CharacterService.GetFocusedBattleChara();
+
             ChatProximity.Log.Debug($"Found character: {GetPlayerNameForLog(senderCharacter->NameString)}");
+            ChatProximity.Log.Verbose($"Character ID is {senderCharacter->EntityId}");
+            ChatProximity.Log.Debug($"Found focused character: {(focusedCharacter != null
+                                         ? GetPlayerNameForLog(focusedCharacter->NameString)
+                                         : "null")}");
+            ChatProximity.Log.Verbose($"Focused character ID is {(focusedCharacter != null
+                                        ? focusedCharacter->EntityId.ToString()
+                                        : "null")}");
+            ChatProximity.Log.Verbose($"Config state: " +
+                                      $"RecolorTargeted={Plugin.Configuration.RecolorTargeted} " +
+                                      $"RecolorTargeting={Plugin.Configuration.RecolorTargeting} " +
+                                      $"RecolorFocusTarget={Plugin.Configuration.RecolorFocusTarget}");
 
             RecolorMode recolorMode;
             if (Plugin.Configuration.RecolorTargeted &&
@@ -82,6 +98,11 @@ internal class ChatHandler(ChatProximity plugin)
                      currentCharacter->GetTargetId().ObjectId == senderCharacter->EntityId)
             {
                 recolorMode = RecolorMode.Targeting;
+            }
+            else if (Plugin.Configuration.RecolorFocusTarget && focusedCharacter != null &&
+                     focusedCharacter->EntityId == senderCharacter->EntityId)
+            {
+                recolorMode = RecolorMode.FocusTarget;
             }
             else
             {
@@ -127,10 +148,10 @@ internal class ChatHandler(ChatProximity plugin)
     }
 
     /// <summary>
-    /// Anonymise if needed a player name
+    /// Anonymize if needed a player name
     /// </summary>
-    /// <param name="playerName">The player name to anonymise</param>
-    /// <returns>The two first characters of the name followed by ... if anonymise is enabled, the whole name otherwise</returns>
+    /// <param name="playerName">The player name to anonymize</param>
+    /// <returns>The two first characters of the name followed by ... if anonymize is enabled, the whole name otherwise</returns>
     private String GetPlayerNameForLog(String playerName)
     {
         return Plugin.Configuration.AnonymiseNames && playerName.Length > 2
@@ -139,10 +160,10 @@ internal class ChatHandler(ChatProximity plugin)
     }
 
     /// <summary>
-    /// Anonymise if needed a message
+    /// Anonymize if needed a message
     /// </summary>
-    /// <param name="message">The message to anonymise</param>
-    /// <returns>The two first characters of the message followed by ... if anonymise is enabled, the whole message otherwise</returns>
+    /// <param name="message">The message to anonymize</param>
+    /// <returns>The two first characters of the message followed by ... if anonymize is enabled, the whole message otherwise</returns>
     private string GetMessageForLog(SeString message)
     {
         var messageText = message.ToString();
@@ -153,7 +174,7 @@ internal class ChatHandler(ChatProximity plugin)
 
     /// <summary>
     /// Compute the distance between two players
-    /// Add a weight to the vertical distance if related config is enabled
+    /// Add a weight to the vertical distance if the related config is enabled
     /// </summary>
     /// <param name="player1">The first player position</param>
     /// <param name="player2">The second player position</param>
@@ -215,6 +236,10 @@ internal class ChatHandler(ChatProximity plugin)
 
             case RecolorMode.Targeted:
                 color = config.TargetedColor;
+                break;
+            
+            case RecolorMode.FocusTarget:
+                color = config.FocusTargetColor;
                 break;
 
             case RecolorMode.None:

@@ -16,6 +16,7 @@ public class Configuration : IPluginConfiguration
     public bool InsideReducer { get; set; } = true;
     public bool RecolorTargeting { get; set; } = false;
     public bool RecolorTargeted { get; set; } = false;
+    public bool RecolorFocusTarget { get; set; } = false;
     public bool EditThreshold { get; set; } = false;
     public bool AnonymiseNames { get; set; } = true;
     
@@ -41,6 +42,7 @@ public class Configuration : IPluginConfiguration
             new Vector4(0.23f, 0.23f, 0.23f, 1f),
             new Vector4(0.5f, 0.8f, 1f, 1f),
             new Vector4(0.6f, 1f, 0.7f, 1f),
+            new Vector4(0.5f, 0.8f, 1f, 1f),
             ref updated
         );
 
@@ -52,6 +54,7 @@ public class Configuration : IPluginConfiguration
             new Vector4(0.29f, 0.25f, 0.01f, 1f),
             new Vector4(1f, 0.6f, 0.3f, 1f),
             new Vector4(1f, 0.4f, 0.6f, 1f),
+            new Vector4(0.5f, 0.8f, 1f, 1f),
             ref updated
         );
 
@@ -63,6 +66,7 @@ public class Configuration : IPluginConfiguration
             new Vector4(0.21f, 0.29f, 0.28f, 1f), 
             new Vector4(0.8f, 0.9f, 0.5f, 1f),
             new Vector4(0.6f, 0.7f, 1f, 1f),
+            new Vector4(0.5f, 0.8f, 1f, 1f),
             ref updated
         );
 
@@ -74,6 +78,7 @@ public class Configuration : IPluginConfiguration
             new Vector4(0.21f, 0.29f, 0.28f, 1f), 
             new Vector4(0.8f, 0.9f, 0.5f, 1f),
             new Vector4(0.6f, 0.7f, 1f, 1f),
+            new Vector4(0.5f, 0.8f, 1f, 1f),
             ref updated
         );
 
@@ -91,11 +96,11 @@ public class Configuration : IPluginConfiguration
         }
     }
 
-    private void EnsureChatTypeConfig(XivChatType chatType, bool enabled, float range, Vector4 nearColor, Vector4 farColor, Vector4 targetingColor, Vector4 targetedColor, ref bool updated)
+    private void EnsureChatTypeConfig(XivChatType chatType, bool enabled, float range, Vector4 nearColor, Vector4 farColor, Vector4 targetingColor, Vector4 targetedColor, Vector4 focusTargetColor, ref bool updated)
     {
         if (!ChatTypeConfigs.TryGetValue(chatType, out var config))
         {
-            ChatTypeConfigs[chatType] = new ChatTypeConfig(chatType, enabled, range, nearColor, farColor, targetingColor, targetedColor);
+            ChatTypeConfigs[chatType] = new ChatTypeConfig(chatType, enabled, range, nearColor, farColor, targetingColor, targetedColor, focusTargetColor);
             ChatProximity.Log.Info($"Created config for {chatType} chat");
             updated = true;
         }
@@ -104,7 +109,7 @@ public class Configuration : IPluginConfiguration
             // Migrate existing config to ensure it has the new properties
             var migrated = false;
 
-            if (config.Enabled == default)
+            if (config.Enabled == false)
             {
                 config.Enabled = enabled;
                 migrated = true;
@@ -132,6 +137,11 @@ public class Configuration : IPluginConfiguration
             if (config.TargetedColor == default)
             {
                 config.TargetedColor = targetedColor;
+                migrated = true;
+            }
+            if (config.FocusTargetColor == default)
+            {
+                config.FocusTargetColor = focusTargetColor;
                 migrated = true;
             }
             if (Math.Abs(config.Threshold - 0) < 0.0001f)

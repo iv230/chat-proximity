@@ -23,5 +23,10 @@ public enum RecolorMode
     /// <summary>
     /// Recolors messages when the player is targeting the sender.
     /// </summary>
-    Targeting
+    Targeting,
+    
+    /// <summary>
+    /// Recolors message when player is in focus target.
+    /// </summary>
+    FocusTarget,
 }

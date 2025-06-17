@@ -33,7 +33,7 @@ public sealed class ChatProximity : IDalamudPlugin
 
     public ChatProximity()
     {
-        Log.Info("Starting Chat Proximity!");
+        Log.Info($"===Starting {PluginInterface.Manifest.Name}===");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.ValidateAndMigrate();
 
@@ -53,6 +53,7 @@ public sealed class ChatProximity : IDalamudPlugin
         // Events
         ChatGui.ChatMessage += HandleMessage;
 
+        // Dalamud plugin interface buttons
         PluginInterface.UiBuilder.Draw += DrawUi;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
