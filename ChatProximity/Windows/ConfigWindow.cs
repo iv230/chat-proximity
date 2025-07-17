@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using ChatProximity.Config;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -20,9 +21,30 @@ public class ConfigWindow : Window, IDisposable
 
         SizeCondition = ImGuiCond.FirstUseEver;
         Size = new Vector2(900, 400);
+
+        TitleBarButtons =
+        [
+            new TitleBarButton()
+            {
+                Icon = FontAwesomeIcon.Heart,
+                Click = _ => {
+                    Process.Start(new ProcessStartInfo {FileName = "https://ko-fi.com/iriswhm", UseShellExecute = true});
+                },
+                IconOffset = new Vector2(2, 1),
+                ShowTooltip = () =>
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.Text("Support Iris on Ko-fi :3");
+                    ImGui.EndTooltip();
+                }
+            },
+        ];
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 
     public override void PreDraw() { }
 
@@ -41,14 +63,6 @@ public class ConfigWindow : Window, IDisposable
         ImGui.TextUnformatted("Chat Color Configuration");
         ImGui.Spacing();
         DrawChatTable();
-
-        ImGui.Spacing();
-        ImGui.Text(" ");
-        ImGui.SameLine();
-        if (ImGui.Button("Support Iris on Ko-fi :3"))
-        {
-            Process.Start(new ProcessStartInfo {FileName = "https://ko-fi.com/iriswhm", UseShellExecute = true});
-        }
     }
 
     /// <summary>
