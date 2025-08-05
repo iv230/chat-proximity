@@ -44,7 +44,7 @@ public class ChatMessageService
         }
 
         // Update the message with the new payloads
-        message = sb.ToSeString().ToDalamudString();
+        message = sb.ToReadOnlySeString().ToDalamudString();
 
         ChatProximity.Log.Verbose($"New message is {message.ToJson()}");
     }
