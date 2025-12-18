@@ -14,11 +14,11 @@ public static class CharacterService
     /// </returns>
     public static unsafe BattleChara* GetLocalPlayer()
     {
-        return (BattleChara*)(ChatProximity.ClientState.LocalPlayer?.Address ?? 0);
+        return (BattleChara*)(ChatProximity.ObjectTable.LocalPlayer?.Address ?? 0);
     }
 
     /// <summary>
-    /// Retrieves the BattleChara pointer of the currently focused target, if it is a player character.
+    /// Retrieves the BattleChara pointer of the currently focused target if it is a player character.
     /// </summary>
     /// <returns>
     /// A pointer to the focused target's <c>BattleChara</c> structure if the target is a player character,
