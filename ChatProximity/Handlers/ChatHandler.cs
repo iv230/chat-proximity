@@ -1,7 +1,7 @@
 using System;
 using ChatProximity.Config;
 using ChatProximity.Service;
-using Dalamud.Game.Text;
+using Dalamud.Game.Chat;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -17,29 +17,26 @@ internal class ChatHandler(ChatProximity plugin)
     /// <summary>
     /// Main message handling process
     /// </summary>
-    /// <param name="type">Message type</param>
-    /// <param name="sender">Character who sent the message</param>
-    /// <param name="message">The message content</param>
-    /// <param name="isHandled">Whenever the message is handled or not</param>
-    public unsafe void OnMessage(XivChatType type, ref SeString sender, ref SeString message, ref bool isHandled)
+    /// <param name="message">The message object wrapper</param>
+    public unsafe void OnMessage(IHandleableChatMessage message)
     {
-        if (isHandled)
+        if (message.IsHandled)
         {
             ChatProximity.Log.Verbose("Message considered as handled, abort");
             return;
         }
 
-        Plugin.Configuration.ChatTypeConfigs.TryGetValue(type, out var config);
+        Plugin.Configuration.ChatTypeConfigs.TryGetValue(message.LogKind, out var config);
 
         if (config is not { Enabled: true })
         {
             ChatProximity.Log.Verbose($"Not supported message or config disabled" +
-                                      $"(config is {config?.Type.ToString() ?? "null"} for type {type})");
+                                      $"(config is {config?.Type.ToString() ?? "null"} for type {message.LogKind})");
             return;
         }
 
-        ChatProximity.Log.Debug($"Caught {type} message from" +
-                                $"{GetPlayerNameForLog(sender.TextValue)}: {GetMessageForLog(message)}");
+        ChatProximity.Log.Debug($"Caught {message.LogKind} message from" +
+                                $"{GetPlayerNameForLog(message.Sender.TextValue)}: {GetMessageForLog(message.Message)}");
         try
         {
             var currentCharacter = CharacterService.GetLocalPlayer();
@@ -49,10 +46,10 @@ internal class ChatHandler(ChatProximity plugin)
                 return;
             }
 
-            var senderCharacter = GetSender(sender);
+            var senderCharacter = GetSender(message.Sender);
             if (senderCharacter == null)
             {
-                ChatProximity.Log.Warning($"Could not resolve sender character: {sender}");
+                ChatProximity.Log.Warning($"Could not resolve sender character: {message.Sender}");
                 return;
             }
 
@@ -66,10 +63,10 @@ internal class ChatHandler(ChatProximity plugin)
 
             if (Plugin.Configuration.EditThreshold && distance > config.Threshold)
             {
-                ChatProximity.Log.Info($"Messaged dropped: [{type.ToString()}] " +
-                                       $"{GetPlayerNameForLog(senderCharacter->NameString)} : {message.TextValue}");
+                ChatProximity.Log.Info($"Messaged dropped: [{message.LogKind.ToString()}] " +
+                                       $"{GetPlayerNameForLog(senderCharacter->NameString)} : {message.Message }");
                 ChatProximity.Log.Debug($"Distance {distance} exceeds threshold {config.Threshold}");
-                ChatMessageService.DropMessage(ref message, ref isHandled);
+                message.PreventOriginal();
                 return;
             }
 
@@ -110,7 +107,7 @@ internal class ChatHandler(ChatProximity plugin)
             }
 
             var colorKey = GetColor(recolorMode, config, distance);
-            ChatMessageService.HandleMessage(ref message, colorKey);
+            message.Message = ChatMessageService.HandleMessage(message.Message, colorKey);
         }
         catch (Exception e)
         {

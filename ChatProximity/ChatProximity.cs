@@ -6,10 +6,9 @@ using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using ChatProximity.Windows;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
 using ChatProximity.Handlers;
 using ChatProximity.Service;
+using Dalamud.Game.Chat;
 
 namespace ChatProximity;
 
@@ -88,9 +87,9 @@ public sealed class ChatProximity : IDalamudPlugin
         }
     }
 
-    private void HandleMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
+    private void HandleMessage(IHandleableChatMessage message)
     {
-        ChatHandler.OnMessage(type, ref sender, ref message, ref isHandled);
+        ChatHandler.OnMessage(message);
     }
     
     private void DrawUi() => WindowSystem.Draw();

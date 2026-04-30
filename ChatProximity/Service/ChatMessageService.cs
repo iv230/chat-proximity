@@ -14,7 +14,7 @@ public class ChatMessageService
     /// </summary>
     /// <param name="message">The message to handle</param>
     /// <param name="color">The computed color</param>
-    public static void HandleMessage(ref SeString message, Vector4 color)
+    public static SeString HandleMessage(SeString message, Vector4 color)
     {
         ChatProximity.Log.Verbose($"Message is {message.ToJson()}");
         var sb = new SeStringBuilder();
@@ -47,6 +47,7 @@ public class ChatMessageService
         message = sb.ToReadOnlySeString().ToDalamudString();
 
         ChatProximity.Log.Verbose($"New message is {message.ToJson()}");
+        return message;
     }
 
     /// <summary>
