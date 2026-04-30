@@ -11,6 +11,7 @@ namespace ChatProximity.Config;
 public class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 1;
+    public string Language { get; set; } = "en";
 
     public bool VerticalIncrease { get; set; } = true;
     public bool InsideReducer { get; set; } = true;

@@ -7,4 +7,7 @@
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
+    <ItemGroup>
+      <Content Include="i18n\locales\en.json" />
+    </ItemGroup>
 </Project>

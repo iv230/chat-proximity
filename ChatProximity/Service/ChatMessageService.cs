@@ -17,9 +17,12 @@ public class ChatMessageService
     public static void HandleMessage(ref SeString message, Vector4 color)
     {
         ChatProximity.Log.Verbose($"Message is {message.ToJson()}");
+        // We create a variable `sb`, a string builder used to rebuild a properly colored message that will replace the
+        // original one
         var sb = new SeStringBuilder();
 
-        // Extracting and processing payloads
+        // We iterate through all message payloads to process them individually without interfering with other plugins
+        // actions
         for (var i = 0; i < message.Payloads.Count; i++)
         {
             var payload = message.Payloads[i];
@@ -29,6 +32,8 @@ public class ChatMessageService
                 ChatProximity.Log.Verbose($"i = {i}");
                 var previousPayLoad = i > 0 ? message.Payloads[i - 1] : null;
 
+                // Here I we whether to modify the payload color or not:
+                // darken "white" text while preserving colors already modified by other plugins
                 if (previousPayLoad is UIForegroundPayload { IsEnabled: true } previousPayload)
                     sb.PushColorType(previousPayload.ColorKey);
                 else
@@ -37,13 +42,14 @@ public class ChatMessageService
                 sb.Append(textPayload.Text);
                 sb.PopColor();
             }
+            // Otherwise, keep it as-is in the rebuilt message
             else if (payload is not UIForegroundPayload)
             {
                 sb.Append(new ReadOnlySeStringSpan(payload.Encode()));
             }
         }
 
-        // Update the message with the new payloads
+        // Replace the original message reference with the newly created one
         message = sb.ToReadOnlySeString().ToDalamudString();
 
         ChatProximity.Log.Verbose($"New message is {message.ToJson()}");

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using ChatProximity.Config;
+using ChatProximity.i18n;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
@@ -15,7 +16,7 @@ public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
 
-    public ConfigWindow(ChatProximity chatProximity) : base("Chat Proximity Config")
+    public ConfigWindow(ChatProximity chatProximity) : base(I18N.T("config.window.title"))
     {
         configuration = chatProximity.Configuration;
 
@@ -34,33 +35,26 @@ public class ConfigWindow : Window, IDisposable
                 ShowTooltip = () =>
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Support Iris on Ko-fi :3");
+                    ImGui.Text(I18N.T("config.support.kofi"));
                     ImGui.EndTooltip();
                 }
             },
         ];
     }
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
-
+    public void Dispose() => GC.SuppressFinalize(this);
     public override void PreDraw() { }
 
-    /// <summary>
-    /// Draws the whole window
-    /// </summary>
     public override void Draw()
     {
-        ImGui.TextUnformatted("General Settings");
+        ImGui.TextUnformatted(I18N.T("config.section.general"));
         ImGui.Spacing();
         DrawGeneralConfig();
 
         ImGui.Spacing();
         ImGui.Spacing();
 
-        ImGui.TextUnformatted("Chat Color Configuration");
+        ImGui.TextUnformatted(I18N.T("config.section.chatColors"));
         ImGui.Spacing();
         DrawChatTable();
     }
@@ -71,76 +65,62 @@ public class ConfigWindow : Window, IDisposable
     private void DrawGeneralConfig()
     {
         var verticalIncrease = configuration.VerticalIncrease;
-        if (ImGui.Checkbox("Increase vertical distance incidence", ref verticalIncrease))
+        if (ImGui.Checkbox(I18N.T("config.general.verticalIncrease"), ref verticalIncrease))
         {
             configuration.VerticalIncrease = verticalIncrease;
             configuration.Save();
         }
-        DrawTooltip("(?)", "Enabling this setting increases the importance of vertical distance when calculating" +
-                           " proximity. Vertical distances will weigh more heavily when determining chat range, which" +
-                           " can be useful in multi-floor or elevated areas.");
+        DrawTooltip("(?)", I18N.T("config.general.verticalIncrease.tooltip"));
 
         var insideReducer = configuration.InsideReducer;
-        if (ImGui.Checkbox("Reduce the chat range while inside a housing", ref insideReducer))
+        if (ImGui.Checkbox(I18N.T("config.general.insideReducer"), ref insideReducer))
         {
             configuration.InsideReducer = insideReducer;
             configuration.Save();
         }
-        DrawTooltip("(?)", "When enabled, this option reduces the effective chat range while inside a house or" +
-                           " apartment, allowing for more immersive communication by adjusting distance calculations.");
+        DrawTooltip("(?)", I18N.T("config.general.insideReducer.tooltip"));
 
         var recolorTargeting = configuration.RecolorTargeting;
-        if (ImGui.Checkbox("Recolor message when targeting sender", ref recolorTargeting))
+        if (ImGui.Checkbox(I18N.T("config.general.recolorTargeting"), ref recolorTargeting))
         {
             configuration.RecolorTargeting = recolorTargeting;
             configuration.Save();
         }
-        DrawTooltip("(?)", "When enabled, messages sent by a player you are targeting will have a specific color.");
+        DrawTooltip("(?)", I18N.T("config.general.recolorTargeting.tooltip"));
 
         var recolorTargeted = configuration.RecolorTargeted;
-        if (ImGui.Checkbox("Recolor message when sender targets you", ref recolorTargeted))
+        if (ImGui.Checkbox(I18N.T("config.general.recolorTargeted"), ref recolorTargeted))
         {
             configuration.RecolorTargeted = recolorTargeted;
             configuration.Save();
         }
-        DrawTooltip("(?)", "When enabled, messages from a player targeting you will have a specific color.");
+        DrawTooltip("(?)", I18N.T("config.general.recolorTargeted.tooltip"));
         
         var recolorFocusTarget = configuration.RecolorFocusTarget;
-        if (ImGui.Checkbox("Recolor message when sender is your focus target", ref recolorFocusTarget))
+        if (ImGui.Checkbox(I18N.T("config.general.recolorFocusTarget"), ref recolorFocusTarget))
         {
             configuration.RecolorFocusTarget = recolorFocusTarget;
             configuration.Save();
         }
-        DrawTooltip("(?)", "When enabled, messages from a player you have in focus target you will have a " +
-                           "specific color.");
+        DrawTooltip("(?)", I18N.T("config.general.recolorFocusTarget.tooltip"));
 
         var editThreshold = configuration.EditThreshold;
-        if (ImGui.Checkbox("Edit Threshold (Dangerous)", ref editThreshold))
+        if (ImGui.Checkbox(I18N.T("config.general.editThreshold"), ref editThreshold))
         {
             configuration.EditThreshold = editThreshold;
-
             if (!editThreshold)
-            {
                 configuration.ResetAllThreshold();
-            }
-            
             configuration.Save();
         }
-        DrawTooltip("(?)", "Enabling this option adds a 'Threshold' column to the chat configuration table." +
-                           " This column allows you to set a maximum distance for each channel, beyond which messages" +
-                           " will be entirely suppressed and not displayed. Warning: Messages from a distance greater" +
-                           " than the specified threshold will be permanently deleted and cannot be recovered." +
-                           " Use this option with caution, as it can result in the loss of important communications," +
-                           " especially in role play.");
+        DrawTooltip("(?)", I18N.T("config.general.editThreshold.tooltip"));
 
         var anonymise = configuration.AnonymiseNames;
-        if (ImGui.Checkbox("Anonymise player names in logs", ref anonymise))
+        if (ImGui.Checkbox(I18N.T("config.general.anonymiseLogs"), ref anonymise))
         {
             configuration.AnonymiseNames = anonymise;
             configuration.Save();
         }
-        DrawTooltip("(?)", "When this option is enabled, player names will be anonymized in Dalamud's debug logs." +
-                           " This is useful for protecting privacy in logs created for plugin debugging or troubleshooting.");
+        DrawTooltip("(?)", I18N.T("config.general.anonymiseLogs.tooltip"));
     }
 
     /// <summary>
@@ -157,21 +137,22 @@ public class ConfigWindow : Window, IDisposable
 
         if (ImGui.BeginTable("ChatTypesTable##", columnCount))
         {
-            ImGui.TableSetupColumn("Channel", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Near Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Far Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn(I18N.T("table.channel"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn(I18N.T("table.enabled"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn(I18N.T("table.nearColor"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn(I18N.T("table.farColor"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
 
-            if (configuration.RecolorTargeting)
-                ImGui.TableSetupColumn("Targeting Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+        if (configuration.RecolorTargeting)
+            ImGui.TableSetupColumn(I18N.T("table.targetingColor"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
 
-            if (configuration.RecolorTargeted)
-                ImGui.TableSetupColumn("Targeted Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
-            
-            if (configuration.RecolorFocusTarget)
-                ImGui.TableSetupColumn("Focus Target Color", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+        if (configuration.RecolorTargeted)
+            ImGui.TableSetupColumn(I18N.T("table.targetedColor"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
 
-            ImGui.TableSetupColumn("Threshold", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+        if (configuration.RecolorFocusTarget)
+            ImGui.TableSetupColumn(I18N.T("table.focusTargetColor"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
+
+        if (configuration.EditThreshold)
+            ImGui.TableSetupColumn(I18N.T("table.threshold"), ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthFixed);
 
             ImGui.TableHeadersRow();
 
@@ -188,7 +169,7 @@ public class ConfigWindow : Window, IDisposable
     /// <summary>
     /// Draws the line for a chat type config
     /// </summary>
-    /// <param name="chatTypeConfig">The config to draw line for</param>
+    /// <param name="chatTypeConfig">The config to draw the line for</param>
     private void DrawChatTableLine(ChatTypeConfig chatTypeConfig)
     {
         using var id = ImRaii.PushId(chatTypeConfig.Type.ToString());
@@ -286,7 +267,7 @@ public class ConfigWindow : Window, IDisposable
 
         if (ImGui.IsItemHovered())
         {
-            ImGui.SetTooltip("Right-click to manually enter a precise value.");
+            ImGui.SetTooltip(I18N.T("threshold.tooltip"));
         }
 
         if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
@@ -302,7 +283,7 @@ public class ConfigWindow : Window, IDisposable
                 config.Threshold = Math.Clamp(threshold, min, max);
                 configuration.Save();
             }
-            if (ImGui.Button("Close"))
+            if (ImGui.Button(I18N.T("common.close")))
             {
                 ImGui.CloseCurrentPopup();
             }

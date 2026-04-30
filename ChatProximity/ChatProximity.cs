@@ -9,6 +9,7 @@ using ChatProximity.Windows;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using ChatProximity.Handlers;
+using ChatProximity.i18n;
 using ChatProximity.Service;
 
 namespace ChatProximity;
@@ -36,6 +37,9 @@ public sealed class ChatProximity : IDalamudPlugin
         Log.Info($"===Starting {PluginInterface.Manifest.Name}===");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.ValidateAndMigrate();
+        
+        // i18n
+        I18N.Load(Configuration.Language);
 
         // Windows
         ConfigWindow = new ConfigWindow(this);

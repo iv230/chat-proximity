@@ -1,0 +1,43 @@
+﻿{
+    "config.window.title": "Chat Proximity Config",
+
+    "config.support.kofi": "Support Iris on Ko-fi :3",
+
+    "config.section.general": "General Settings",
+    "config.section.chatColors": "Chat Color Configuration",
+
+    "config.general.verticalIncrease": "Increase vertical distance incidence",
+    "config.general.verticalIncrease.tooltip": "Enabling this setting increases the importance of vertical distance when calculating proximity. Vertical distances will weigh more heavily when determining chat range, which can be useful in multi-floor or elevated areas.",
+
+    "config.general.insideReducer": "Reduce the chat range while inside a housing",
+    "config.general.insideReducer.tooltip": "When enabled, this option reduces the effective chat range while inside a house or apartment, allowing for more immersive communication by adjusting distance calculations.",
+
+    "config.general.recolorTargeting": "Recolor message when targeting sender",
+    "config.general.recolorTargeting.tooltip": "When enabled, messages sent by a player you are targeting will have a specific color.",
+
+    "config.general.recolorTargeted": "Recolor message when sender targets you",
+    "config.general.recolorTargeted.tooltip": "When enabled, messages from a player targeting you will have a specific color.",
+
+    "config.general.recolorFocusTarget": "Recolor message when sender is your focus target",
+    "config.general.recolorFocusTarget.tooltip": "When enabled, messages from a player you have in focus target will have a specific color.",
+
+    "config.general.editThreshold": "Edit Threshold (Dangerous)",
+    "config.general.editThreshold.tooltip": "Enabling this option adds a 'Threshold' column to the chat configuration table. This column allows you to set a maximum distance for each channel, beyond which messages will be entirely suppressed and not displayed. Warning: Messages from a distance greater than the specified threshold will be permanently deleted and cannot be recovered. Use with caution.",
+
+    "config.general.anonymiseLogs": "Anonymise player names in logs",
+    "config.general.anonymiseLogs.tooltip": "When this option is enabled, player names will be anonymized in Dalamud's debug logs. This is useful for protecting privacy in logs created for plugin debugging or troubleshooting.",
+
+    "table.channel": "Channel",
+    "table.enabled": "Enabled",
+    "table.nearColor": "Near Color",
+    "table.farColor": "Far Color",
+    "table.targetingColor": "Targeting Color",
+    "table.targetedColor": "Targeted Color",
+    "table.focusTargetColor": "Focus Target Color",
+    "table.threshold": "Threshold",
+
+    "threshold.tooltip": "Right-click to manually enter a precise value.",
+    "threshold.popup.title": "Edit Threshold",
+
+    "common.close": "Close"
+}
