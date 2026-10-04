@@ -26,6 +26,7 @@ public sealed class ChatProximity : IDalamudPlugin
 
     public Configuration Configuration { get; init; }
     public ChatMessageService ChatMessageService { get; init; }
+    public ColorService ColorService { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
     private ChatHandler ChatHandler { get; init; }
     private ChatProxCommand ChatProxCommand { get; init; }
@@ -35,19 +36,20 @@ public sealed class ChatProximity : IDalamudPlugin
         Log.Info($"===Starting {PluginInterface.Manifest.Name}===");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.ValidateAndMigrate();
+        
+        // Services
+        ChatMessageService = new ChatMessageService();
+        ColorService = new ColorService(this);
 
         // Windows
         ConfigWindow = new ConfigWindow(this);
         WindowSystem.AddWindow(ConfigWindow);
 
         // Handlers
-        ChatHandler = new ChatHandler(this);
+        ChatHandler = new ChatHandler(this, ColorService);
         
         // Commands
         ChatProxCommand = new ChatProxCommand(this, CommandName);
-        
-        // Services
-        ChatMessageService = new ChatMessageService();
 
         // Events
         ChatGui.ChatMessage += HandleMessage;
@@ -71,6 +73,9 @@ public sealed class ChatProximity : IDalamudPlugin
         ConfigWindow.Dispose();
 
         CommandManager.RemoveHandler(CommandName);
+        
+        PluginInterface.UiBuilder.Draw -= DrawUi;
+        PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
 
         ChatGui.ChatMessage -= HandleMessage;
     }

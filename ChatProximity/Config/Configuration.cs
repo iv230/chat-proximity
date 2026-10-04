@@ -14,10 +14,12 @@ public class Configuration : IPluginConfiguration
 
     public bool VerticalIncrease { get; set; } = true;
     public bool InsideReducer { get; set; } = true;
+    public ColorCurve ColorCurve { get; set; } = ColorCurve.Linear;
     public bool RecolorTargeting { get; set; } = false;
     public bool RecolorTargeted { get; set; } = false;
     public bool RecolorFocusTarget { get; set; } = false;
     public bool EditThreshold { get; set; } = false;
+
     public bool AnonymiseNames { get; set; } = true;
     
     public Dictionary<XivChatType, ChatTypeConfig> ChatTypeConfigs { get; set; } = new();
